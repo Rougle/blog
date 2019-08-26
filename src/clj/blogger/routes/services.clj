@@ -28,8 +28,8 @@
 
 (s/def ::user (s/keys :req-un [::id ::pass ::first_name ::last_name]))
 (s/def ::new_entry (s/keys :req-un [::id ::author_id ::header ::summary ::content]))
-;;TODO This makes all keys optional. Consider making the entry itself optional instead.
-(s/def ::entry (s/keys :opt-un [::id ::author_id ::created ::last_modified ::header ::summary ::content]))
+(s/def ::entry (s/keys :req-un [::id ::author_id ::created ::last_modified ::header ::summary ::content]))
+(s/def ::entries (s/coll-of ::entry))
 
 (defn service-routes []
   ["/api"
@@ -74,7 +74,7 @@
 
     ["/entries"
      {:get {:summary   "Gets all entries"
-            :responses {200 {:body [::entry]}}
+            :responses {200 {:body ::entries}}
             :handler   (fn [_]
                          (blog/get-entries))}}]
     ["/entry"
