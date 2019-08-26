@@ -9,7 +9,7 @@
 (defn get-entry [id]
   (if-let [entry (db/get-entry {:id id})]
     (ok entry)
-    (not-found {:message "Entry with given id not found"})))
+    (not-found {:message "Couldn't find entry with given id"})))
 
 (defn post-entry! [{:keys [id author_id header summary content]}]
   (try
@@ -29,7 +29,7 @@
   (try
     (if (== 1 (db/update-entry! {:id id :header header :summary summary :content content}))
       (db/get-entry {:id id})
-      (not-found {:message "Entry with given id not found"}))
+      (not-found {:message "Couldn't find entry with given id"}))
     (catch Exception e
       (log/error e))))
 
@@ -37,6 +37,6 @@
   (try
     (if (== 1 (db/delete-entry! {:id id}))
       (no-content)
-      (not-found {:message "Entry with given id not found"}))
+      (not-found {:message "Couldn't find entry with given id"}))
     (catch Exception e
       (log/error e))))
