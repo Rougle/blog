@@ -1,0 +1,30 @@
+version: '3.7'
+
+services:
+  db:
+    image: postgres
+    restart: always
+    environment:
+      - POSTGRES_DB=db_dev
+      - POSTGRES_USER=dev_user
+      - POSTGRES_PASSWORD=mypasswd
+
+  api:
+    build:
+      context: .
+      dockerfile: api.Dockerfile
+    depends_on:
+      - db
+    ports:
+      - 7000:7000
+      - 7002:7002
+      - 3000:3000
+      - 3449:3449
+    volumes:
+      - .:/usr/src/app
+    command: >
+      bash -c "lein run migrate &&
+      lein repl :headless :port 7000"
+
+# To start the app, repl connect into 7000, and run (start)
+# To start figwheel, run (use 'figwheel-sidecar.repl-api) and (start-figwheel!)
