@@ -3,6 +3,19 @@
             [clojure.tools.logging :as log]
             [ring.util.http-response :refer :all]))
 
+(defn get-users []
+  (db/get-users))
+
+(defn create-user! [username first_name last_name pass]
+  (try
+    (db/create-user!
+      {:id  (java.util.UUID/randomUUID)
+       :username username
+       :first_name first_name
+       :last_name last_name
+       :pass pass
+       })))
+
 (defn get-entries []
   (ok (db/get-entries)))
 
@@ -11,17 +24,18 @@
     (ok entry)
     (not-found {:message "Couldn't find entry with given id"})))
 
-(defn post-entry! [{:keys [id author_id header summary content]}]
+(defn create-entry! [{:keys [author_id header summary content]}]
   (try
-    (db/create-entry!
-      {:id            id
-       :author_id     author_id
-       :created       (java.util.Date.)
-       :last_modified (java.util.Date.)
-       :header        header
-       :summary       summary
-       :content       content})
-    (ok (db/get-entry {:id id}))
+    (let [id (java.util.UUID/randomUUID)]
+      (db/create-entry!
+        {:id            id
+         :author_id     author_id
+         :created       (java.util.Date.)
+         :last_modified (java.util.Date.)
+         :header        header
+         :summary       summary
+         :content       content})
+      (ok (db/get-entry {:id id})))
     (catch Exception e
       (log/error e))))
 

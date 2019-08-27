@@ -15,9 +15,9 @@
     [clojure.spec.alpha :as s]
     [clojure.tools.logging :as log]))
 
-(s/def ::id string?)
+(s/def ::id uuid?)
 (s/def ::pass string?)
-(s/def ::author_id string?)
+(s/def ::author_id uuid?)
 (s/def ::header string?)
 (s/def ::summary string?)
 (s/def ::content string?)
@@ -27,7 +27,7 @@
 (s/def ::last_modified string?)
 
 (s/def ::user (s/keys :req-un [::id ::pass ::first_name ::last_name]))
-(s/def ::new_entry (s/keys :req-un [::id ::author_id ::header ::summary ::content]))
+(s/def ::new_entry (s/keys :req-un [::author_id ::header ::summary ::content]))
 (s/def ::entry (s/keys :req-un [::id ::author_id ::created ::last_modified ::header ::summary ::content]))
 (s/def ::entries (s/coll-of ::entry))
 
@@ -66,8 +66,7 @@
              {:url    "/api/swagger.json"
               :config {:validator-url nil}})}]]
 
-   ;; TODO Generate ids in backend
-   ;; TODO Fix user-id author-id relation
+   ;; TODO Generate test user in migrations
    ;; TODO Add authentication
    ["/blog"
     {:swagger {:tags ["blog"]}}
@@ -82,7 +81,7 @@
              :parameters {:body {:new_entry ::new_entry}}
              :responses  {201 {:body ::entry}}
              :handler    (fn [{{{:keys [new_entry]} :body} :parameters}]
-                           (blog/post-entry! new_entry))}}]
+                           (blog/create-entry! new_entry))}}]
 
     ["/entry/:id"
      {:get    {:summary    "Gets a single entry by id"

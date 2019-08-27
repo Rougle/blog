@@ -4,19 +4,23 @@
 -- :name create-user! :! :n
 -- :doc creates a new user record
 INSERT INTO users
-(id, pass, first_name, last_name)
-VALUES (:id, :pass)
+(id, username, first_name, last_name, pass)
+VALUES (:id, :username, :first_name, :last_name, :pass)
 
 -- :name update-user! :! :n
 -- :doc updates an existing user record
 UPDATE users
-SET pass = :pass, first_name = :first_name, last_name = :last_name
+SET username = :username, first_name = :first_name, last_name = :last_name, pass = :pass
 WHERE id = :id
 
 -- :name get-user :? :1
 -- :doc retrieves a user record given the id
 SELECT * FROM users
 WHERE id = :id
+
+-- :name get-users :? :*
+-- :doc retrieves a user record given the id
+SELECT * FROM users
 
 -- :name delete-user! :! :n
 -- :doc deletes a user record given the id
