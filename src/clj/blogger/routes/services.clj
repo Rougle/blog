@@ -85,7 +85,7 @@
 
     ["/entry/:id"
      {:get    {:summary    "Gets a single entry by id"
-               :parameters {:path {:id string?}}
+               :parameters {:path {:id uuid?}}
                :responses  {200 {:body ::entry}
                             404 {:body {:message string?}}}
                :handler    (fn [{{{:keys [id]} :path} :parameters}]
@@ -93,7 +93,7 @@
                }
 
       :delete {:summary    "Deletes a blog entry"
-               :parameters {:path {:id string?}}
+               :parameters {:path {:id uuid?}}
                :responses  {204 {:res any?}
                             404 {:body {:message string?}}}
                :handler    (fn [{{{:keys [id]} :path} :parameters}]
@@ -101,7 +101,7 @@
                }
 
       :post   {:summary    "Updates a blog entry"
-               :parameters {:path {:id string?}
+               :parameters {:path {:id uuid?}
                             :body {:header string? :summary string? :content string?}}
                :responses  {200 {:body {:body ::entry}}
                             404 {:body {:message string?}}}
