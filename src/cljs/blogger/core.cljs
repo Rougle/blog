@@ -7,10 +7,12 @@
     [blogger.ajax :as ajax]
     [ajax.core :refer [GET POST]]
     [reitit.core :as reitit]
-    [clojure.string :as string])
+    [clojure.string :as string]
+    [blogger.components.blog :as blog])
   (:import goog.History))
 
 (defonce session (r/atom {:page :home}))
+(defonce match (r/atom nil))
 
 (defn nav-link [uri title page]
   [:a.navbar-item
@@ -32,11 +34,21 @@
       {:class (when @expanded? :is-active)}
       [:div.navbar-start
        [nav-link "#/" "Home" :home]
+       [nav-link "#/blog" "Blog" :blog]
        [nav-link "#/about" "About" :about]]]]))
 
 (defn about-page []
   [:section.section>div.container>div.content
    [:img {:src "/img/warning_clojure.png"}]])
+
+(defn blog-list []
+  [:section.section>div.container>div.content
+   [(blog/entries-list)]])
+
+(defn blog-entry []
+  (let [{{:keys [id]} :path-params} @match]
+    [:section.section>div.container>div.content
+     [(blog/entry id)]]))
 
 (defn home-page []
   [:section.section>div.container>div.content
@@ -45,6 +57,8 @@
 
 (def pages
   {:home #'home-page
+   :blog-list #'blog-list
+   :blog-entry #'blog-entry
    :about #'about-page})
 
 (defn page []
@@ -56,9 +70,15 @@
 (def router
   (reitit/router
     [["/" :home]
+     ["/blog" :blog-list]
+     ["/blog/entry/:id" :blog-entry]
      ["/about" :about]]))
 
+;;TODO There should be a better way to parse path params
+;;TODO Fix duplicate function call
 (defn match-route [uri]
+  (reset! match (->> (or (not-empty (string/replace uri #"^.*#" "")) "/")
+       (reitit/match-by-path router)))
   (->> (or (not-empty (string/replace uri #"^.*#" "")) "/")
        (reitit/match-by-path router)
        :data
