@@ -28,7 +28,7 @@
 
 (s/def ::user (s/keys :req-un [::id ::pass ::first_name ::last_name]))
 (s/def ::new_entry (s/keys :req-un [::author_id ::header ::summary ::content]))
-(s/def ::entry (s/keys :req-un [::id ::author_id ::created ::last_modified ::header ::summary ::content]))
+(s/def ::entry (s/keys :req-un [::id ::author_id ::created ::last_modified ::header ::summary ::content ::first_name ::last_name]))
 (s/def ::entries (s/coll-of ::entry))
 
 (defn service-routes []
@@ -66,7 +66,8 @@
              {:url    "/api/swagger.json"
               :config {:validator-url nil}})}]]
 
-   ;; TODO Generate test user in migrations
+   ;; TODO Consider splitting user from the blog-entry query or modifying the spec to better support it
+   ;; TODO Consider renaming id -> entry_id for clarity
    ;; TODO Add authentication
    ["/blog"
     {:swagger {:tags ["blog"]}}

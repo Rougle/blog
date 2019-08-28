@@ -43,12 +43,17 @@ WHERE id = :id
 
 -- :name get-entries :? :*
 -- :doc gets all blog entries
-SELECT * FROM blog_entries
+SELECT blog_entries.id, created, last_modified, author_id, header, summary, content, users.first_name, users.last_name
+FROM blog_entries
+INNER JOIN users ON users.id = blog_entries.author_id
 
 -- :name get-entry :? :1
 -- :doc gets single entry
-SELECT * FROM blog_entries
-WHERE id = :id
+SELECT blog_entries.id, created, last_modified, author_id, header, summary, content, users.first_name, users.last_name
+FROM blog_entries
+INNER JOIN users ON users.id = blog_entries.author_id
+WHERE blog_entries.id = :id
+
 
 -- :name delete-entry! :! :n
 -- :doc deletes blog entry with given id
