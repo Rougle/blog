@@ -79,10 +79,11 @@
                          (blog/get-entries))}}]
     ["/entry"
      {:post {:summary    "Creates a new blog entry"
-             :parameters {:body {:new_entry ::new_entry}}
+             :parameters {:body ::new_entry}
              :responses  {201 {:body ::entry}}
-             :handler    (fn [{{{:keys [new_entry]} :body} :parameters}]
-                           (blog/create-entry! new_entry))}}]
+             :handler    (fn [{{:keys [body]} :parameters}]
+                           (log/debug body)
+                           (blog/create-entry! body))}}]
 
     ["/entry/:id"
      {:get    {:summary    "Gets a single entry by id"
