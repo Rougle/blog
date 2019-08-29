@@ -1,0 +1,32 @@
+(ns blogger.components.common)
+
+(defn input [type id placeholder fields]
+  [:input
+   {:type type
+    :placeholder placeholder
+    :value (id @fields)
+    :on-change #(swap! fields assoc id (-> % .-target .-value))}])
+
+(defn form-input [type label id placeholder fields]
+  [:div
+   [:label label]
+   [:div
+      [input type id placeholder fields]]])
+
+(defn text-input [label id placeholder fields]
+  (form-input :text label id placeholder fields))
+
+(defn password-input [label id placeholder fields]
+  (form-input :password label id placeholder fields))
+
+(defn textarea-input [label id placeholder fields]
+  [:div
+   [:label {:for id} label]
+   [:div
+    [:textarea
+     {:id id
+      :value (id @fields)
+      :placeholder placeholder
+      :cols 30
+      :rows 30
+      :on-change #(swap! fields assoc id (-> % .-target .-value))}]]])

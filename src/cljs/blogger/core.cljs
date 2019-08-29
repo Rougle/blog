@@ -34,21 +34,32 @@
       {:class (when @expanded? :is-active)}
       [:div.navbar-start
        [nav-link "#/" "Home" :home]
-       [nav-link "#/blog" "Blog" :blog]
+       [nav-link "#/entries" "Blog" :list-entries]
        [nav-link "#/about" "About" :about]]]]))
 
 (defn about-page []
   [:section.section>div.container>div.content
    [:img {:src "/img/warning_clojure.png"}]])
 
-(defn blog-list []
+(defn entries-list []
   [:section.section>div.container>div.content
    [(blog/entries-list)]])
 
-(defn blog-entry []
+(defn entry-view []
   (let [{{:keys [id]} :path-params} @match]
     [:section.section>div.container>div.content
-     [(blog/entry id)]]))
+     [(blog/entry-view id)]]))
+
+(defn new-entry []
+  [:section.section>div.container>div.content
+   [(blog/new-entry-form)]])
+
+(defn edit-entry []
+  (let [{{:keys [id]} :path-params} @match]
+    [:section.section>div.container>div.content
+     [(blog/edit-entry-form id)]]))
+
+;;TODO Delete entry
 
 (defn home-page []
   [:section.section>div.container>div.content
@@ -57,8 +68,10 @@
 
 (def pages
   {:home #'home-page
-   :blog-list #'blog-list
-   :blog-entry #'blog-entry
+   :list-entries #'entries-list
+   :view-entry #'entry-view
+   :edit-entry #'edit-entry
+   :post-entry #'new-entry
    :about #'about-page})
 
 (defn page []
@@ -70,8 +83,10 @@
 (def router
   (reitit/router
     [["/" :home]
-     ["/blog" :blog-list]
-     ["/blog/entry/:id" :blog-entry]
+     ["/entries" :list-entries]
+     ["/entry/view/:id" :view-entry]
+     ["/entry/edit/:id" :edit-entry]
+     ["/entry/post" :post-entry]
      ["/about" :about]]))
 
 ;;TODO There should be a better way to parse path params

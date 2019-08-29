@@ -1,0 +1,56 @@
+
+
+.blog-preview {
+    margin: 15px;
+}
+
+.form-btn-group {
+    float: right;
+}
+
+.btn {
+    border: none;
+    color: white;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 16px;
+    margin-right: 5px;
+    cursor: pointer;
+    border-radius: 2px;
+    width: 110px;
+    height: 40px;
+
+    &.btn-danger {
+        background-color: #f44336;
+        &:hover {
+            background-color: lighten(#f44336, 10%);
+        }
+    }
+    &.btn-primary {
+        background-color: #008CBA;
+        &:hover {
+            background-color: lighten(#008CBA, 10%);
+        }
+    }
+}
+
+input[type=text] {
+      width: 100%;
+      padding: 12px 20px;
+      margin: 8px 0;
+      display: inline-block;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      box-sizing: border-box;
+}
+
+textarea {
+      width: 100%;
+      padding: 12px 20px;
+      margin: 8px 0;
+      display: inline-block;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      box-sizing: border-box;
+}

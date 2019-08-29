@@ -96,7 +96,10 @@
                                  [ring/ring-mock "0.4.0"]]
                   :plugins      [[com.jakemccrary/lein-test-refresh "0.24.1"]
                                  [lein-doo "0.1.11"]
-                                 [lein-figwheel "0.5.19"]]
+                                 [lein-figwheel "0.5.19"]
+                                 [yogthos/lein-sass "0.1.8"]]
+                  :sass {:source "resources/public/scss" :target "resources/public/css"}
+
                   :cljsbuild{:builds
                    {:app
                     {:source-paths ["src/cljs" "src/cljc" "env/dev/cljs"]
