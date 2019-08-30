@@ -8,6 +8,16 @@
     float: right;
 }
 
+.alert {
+    padding: 20px;
+    color: white;
+    border-radius: 3px;
+
+    &.alert-danger {
+        background-color: #f44336;
+    }
+}
+
 .btn {
     border: none;
     color: white;
