@@ -12,6 +12,7 @@
     [ring.util.http-response :refer :all]
     [clojure.java.io :as io]
     [blogger.routes.services.blog :as blog]
+    [blogger.routes.services.auth :as auth]
     [clojure.spec.alpha :as s]
     [clojure.tools.logging :as log]))
 
@@ -21,12 +22,14 @@
 (s/def ::header string?)
 (s/def ::summary string?)
 (s/def ::content string?)
+(s/def ::username string?)
 (s/def ::first_name string?)
 (s/def ::last_name string?)
 (s/def ::created string?)
 (s/def ::last_modified string?)
 
-(s/def ::user (s/keys :req-un [::id ::pass ::first_name ::last_name]))
+(s/def ::new_user (s/keys :req-un [::pass ::username ::first_name ::last_name]))
+(s/def ::user (s/keys :req-un [::id ::pass ::username ::first_name ::last_name]))
 (s/def ::new_entry (s/keys :req-un [::author_id ::header ::summary ::content]))
 (s/def ::entry (s/keys :req-un [::id ::author_id ::created ::last_modified ::header ::summary ::content ::first_name ::last_name]))
 (s/def ::entries (s/coll-of ::entry))
@@ -66,9 +69,37 @@
              {:url    "/api/swagger.json"
               :config {:validator-url nil}})}]]
 
-   ;; TODO Consider splitting user from the blog-entry query or modifying the spec to better support it
-   ;; TODO Consider renaming id -> entry_id for clarity
+
    ;; TODO Add authentication
+   ;; TODO Having username and id is redundant. Rename username into id.
+   ["/auth"
+    {:swagger {:tags ["auth"]}}
+
+     ["/register"
+      {:post {:summary    "Registers new user"
+              :parameters {:body ::new_user}
+              :responses  {201 {:body {:res string?}}}
+              :handler    (fn [request]
+                            (let [{{{:keys [pass username first_name last_name]} :body} :parameters} request
+                                  session (:session request)]
+                            (auth/register! session pass username first_name last_name)))}}]
+      ["/login"
+       {:post {:summary    "Login user"
+               :parameters {:header {:authorization string?}}
+               :responses  {201 {:body {:res string?}}}
+               :handler    (fn [request]
+                             (let [{{{:keys [authorization]} :header} :parameters} request
+                                    session (:session request)]
+                             (auth/login! session authorization)))}}]
+      ["/logout"
+       {:post {:summary    "Logout user"
+               :parameters {:header {:authorization string?}}
+               :responses  {201 {:body {:res string?}}}
+               :handler    (fn [request]
+                               (auth/logout!))}}]]
+
+  ;; TODO Consider splitting user from the blog-entry query or modifying the spec to better support it
+  ;; TODO Consider renaming id -> entry_id for clarity
    ["/blog"
     {:swagger {:tags ["blog"]}}
 
@@ -82,7 +113,6 @@
              :parameters {:body ::new_entry}
              :responses  {201 {:body ::entry}}
              :handler    (fn [{{:keys [body]} :parameters}]
-                           (log/debug body)
                            (blog/create-entry! body))}}]
 
     ["/entry/:id"

@@ -14,9 +14,9 @@ SET username = :username, first_name = :first_name, last_name = :last_name, pass
 WHERE id = :id
 
 -- :name get-user :? :1
--- :doc retrieves a user record given the id
+-- :doc retrieves a user record with given name
 SELECT * FROM users
-WHERE id = :id
+WHERE username = :username
 
 -- :name get-users :? :*
 -- :doc retrieves a user record given the id

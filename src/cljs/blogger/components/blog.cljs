@@ -3,6 +3,7 @@
             [ajax.core :as ajax]
             [blogger.components.common :as c]))
 
+;; TODO Move to common
 (defn set-hash! [loc]
   (set! (.-hash js/window.location) loc))
 

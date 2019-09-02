@@ -8,7 +8,8 @@
     [ajax.core :refer [GET POST]]
     [reitit.core :as reitit]
     [clojure.string :as string]
-    [blogger.components.blog :as blog])
+    [blogger.components.blog :as blog]
+    [blogger.components.auth :as auth])
   (:import goog.History))
 
 (defonce session (r/atom {:page :home}))
@@ -35,7 +36,8 @@
       [:div.navbar-start
        [nav-link "#/" "Home" :home]
        [nav-link "#/entries" "Blog" :list-entries]
-       [nav-link "#/about" "About" :about]]]]))
+       [nav-link "#/about" "About" :about]]
+      [auth/user-logout]]]))
 
 (defn about-page []
   [:section.section>div.container>div.content
@@ -59,7 +61,13 @@
     [:section.section>div.container>div.content
      [(blog/edit-entry-form id)]]))
 
-;;TODO Delete entry
+(defn register []
+  [:section.section>div.container>div.content
+   [(auth/register-form)]])
+
+(defn login []
+  [:section.section>div.container>div.content
+   [(auth/login-form)]])
 
 (defn home-page []
   [:section.section>div.container>div.content
@@ -72,6 +80,8 @@
    :view-entry #'entry-view
    :edit-entry #'edit-entry
    :post-entry #'new-entry
+   :register #'register
+   :login #'login
    :about #'about-page})
 
 (defn page []
@@ -87,6 +97,8 @@
      ["/entry/view/:id" :view-entry]
      ["/entry/edit/:id" :edit-entry]
      ["/entry/post" :post-entry]
+     ["/auth/register" :register]
+     ["/auth/login" :login]
      ["/about" :about]]))
 
 ;;TODO There should be a better way to parse path params

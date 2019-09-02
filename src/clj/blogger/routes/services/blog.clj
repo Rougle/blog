@@ -3,19 +3,6 @@
             [clojure.tools.logging :as log]
             [ring.util.http-response :refer :all]))
 
-(defn get-users []
-  (db/get-users))
-
-(defn create-user! [username first_name last_name pass]
-  (try
-    (db/create-user!
-      {:id  (java.util.UUID/randomUUID)
-       :username username
-       :first_name first_name
-       :last_name last_name
-       :pass pass
-       })))
-
 (defn get-entries []
   (ok (db/get-entries)))
 
