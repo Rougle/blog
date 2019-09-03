@@ -37,7 +37,7 @@
        [nav-link "#/" "Home" :home]
        [nav-link "#/entries" "Blog" :list-entries]
        [nav-link "#/about" "About" :about]]
-      [auth/user-logout]]]))
+      [(auth/user-logout)]]]))
 
 (defn about-page []
   [:section.section>div.container>div.content
@@ -101,15 +101,15 @@
      ["/auth/login" :login]
      ["/about" :about]]))
 
-;;TODO There should be a better way to parse path params
-;;TODO Fix duplicate function call
+;;TODO There should be a better way to pass path params to components
 (defn match-route [uri]
-  (reset! match (->> (or (not-empty (string/replace uri #"^.*#" "")) "/")
-       (reitit/match-by-path router)))
-  (->> (or (not-empty (string/replace uri #"^.*#" "")) "/")
-       (reitit/match-by-path router)
-       :data
-       :name))
+  (let [matched-route (->> (or (not-empty (string/replace uri #"^.*#" "")) "/")
+                           (reitit/match-by-path router))]
+      (do
+        (reset! match matched-route)
+        (->> matched-route :data :name)
+    )))
+
 ;; -------------------------
 ;; History
 ;; must be called after routes have been defined
