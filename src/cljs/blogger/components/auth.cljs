@@ -1,15 +1,11 @@
 (ns blogger.components.auth
   (:require [reagent.core :refer [atom]]
-            [reagent.session :as session]
             [ajax.core :as ajax]
             [blogger.components.common :as c]
             [goog.crypt.base64 :as b64]
-            [clojure.string :as string]))
-
-;; TODO Move to common
-(defn set-hash! [loc]
-  (set! (.-hash js/window.location) loc))
-
+            [clojure.string :as string]
+            [blogger.components.session :as s]
+            [alandipert.storage-atom :refer [clear-local-storage!]]))
 
 (defn register! [fields error]
   (reset! error {})
@@ -17,7 +13,7 @@
              {:params        @fields
               :handler       #(do
                                 (reset! fields {})
-                                (set-hash! (str "/entries")))
+                                (s/set-hash! (str "/entries")))
               :error-handler #(reset! error {:message (:status-text %)})}))
 
 (defn register-form []
@@ -51,8 +47,9 @@
                {:headers       {"Authorization" (encode-auth (string/trim username) pass)}
                 :handler       #(do
                                   (reset! fields {})
-                                  (session/put! :identity username)
-                                  (set-hash! (str "/entries")))
+                                  (swap! s/session assoc :token (:token %))
+                                  (swap! s/session assoc :username username)
+                                  (s/set-hash! (str "/entries")))
                 :error-handler #(reset! error {:message (:status-text %)})})))
 
 (defn login-form []
@@ -74,13 +71,11 @@
           {:on-click #(login! fields error)}
           "Login"]]]])))
 
-
 (defn user-logout []
-  (if-let [id (session/get :identity)]
-    [:ul.nav.navbar-nav.pull-xs-right
-     [:li.nav-item
-      [:a.dropdown-item.btn
-       {:on-click #(ajax/POST
-                     "/api/auth/logout"
-                     {:handler (fn [] (session/remove! :identity))})}
-       [:i.fa.fa-user] " " id " | sign out"]]]))
+  (fn []
+    (when-let [token (:token @s/session)]
+      [:ul.nav.navbar-nav.pull-xs-right
+       [:li.nav-item
+        [:a.dropdown-item.btn
+         {:on-click #(clear-local-storage!)}
+         [:div "sign out"]]]])))

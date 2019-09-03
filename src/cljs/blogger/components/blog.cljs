@@ -1,11 +1,8 @@
 (ns blogger.components.blog
   (:require [reagent.core :refer [atom]]
             [ajax.core :as ajax]
-            [blogger.components.common :as c]))
-
-;; TODO Move to common
-(defn set-hash! [loc]
-  (set! (.-hash js/window.location) loc))
+            [blogger.components.common :as c]
+            [blogger.components.session :as s]))
 
 ;; TODO parse date into human-friendly form
 (defn entry-preview [entry]
@@ -35,7 +32,7 @@
 (defn delete-entry! [id error]
   (reset! error {})
   (ajax/DELETE (str "/api/blog/entry/" id)
-             {:handler #(set-hash! "/entries")
+             {:handler #(s/set-hash! "/entries")
               :error-handler #(reset! error {:message (:status-text %)})}))
 
 (defn entry-view [id]
@@ -66,15 +63,14 @@
              {:params @fields
               :handler #(do
                           (reset! fields {})
-                          (set-hash! (str "/entry/view/" (:id %))))
+                          (s/set-hash! (str "/entry/view/" (:id %))))
               :error-handler #(reset! error {:message (:status-text %)})}))
 
-;; TODO Client-side checks
-;; TODO Setup session, get id from there
+;; TODO Common client-side/server-side checks to cljc
 (defn new-entry-form []
   (let [fields (atom {})
         error (atom {})]
-    (swap! fields assoc :author_id  #uuid"ceb56f18-77b8-4cc8-88ac-52aff9b5050e")
+    (swap! fields assoc :author (:username @s/session))
     (fn []
       [:div
        (when-let [message (:message @error)]
@@ -98,7 +94,7 @@
              {:params @fields
               :handler #(do
                           (reset! fields {})
-                          (set-hash! (str "/entry/view/" id)))
+                          (s/set-hash! (str "/entry/view/" id)))
               :error-handler #(reset! error {:message (:status-text %)})}))
 
 ;; TODO Client-side checks
