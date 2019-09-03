@@ -6,17 +6,28 @@
     [clojure.tools.logging :as log]
     [blogger.layout :refer [error-page]]
     [ring.middleware.anti-forgery :refer [wrap-anti-forgery]]
+    [ring.middleware.session :refer [wrap-session]]
+    [ring.middleware.session.cookie :refer [cookie-store]]
     [blogger.middleware.formats :as formats]
     [muuntaja.middleware :refer [wrap-format wrap-params]]
     [blogger.config :refer [env]]
     [ring-ttl-session.core :refer [ttl-memory-store]]
     [ring.middleware.defaults :refer [site-defaults wrap-defaults]]
+    [buddy.auth.accessrules :refer [restrict]]
+    [buddy.auth :refer [authenticated? throw-unauthorized]]
+    [buddy.auth.backends :as backends]
     [buddy.auth.middleware :refer [wrap-authentication wrap-authorization]]
-            [buddy.auth.accessrules :refer [restrict]]
-            [buddy.auth :refer [authenticated?]]
-    [buddy.auth.backends.session :refer [session-backend]])
-  (:import 
+    [buddy.auth.accessrules :refer [wrap-access-rules]]
+    [buddy.core.keys :as ks]
+    [clojure.java.io :as io]
+    [buddy.sign.jwt :as jwt]
+    [buddy.auth.protocols :as proto]
+    [buddy.auth.http :as http])
+  (:import
            ))
+
+;; TODO Secret to env var
+(def secret "mysupersecret")
 
 (defn wrap-internal-error [handler]
   (fn [req]
@@ -49,15 +60,22 @@
     {:status 403
      :title (str "Access to " (:uri request) " is not authorized")}))
 
-(defn wrap-restricted [handler]
-  (restrict handler {:handler authenticated?
-                     :on-error on-error}))
+(defn wrap-auth [handler]
+  (fn [req]
+    (if (:auth-user req)
+      (handler req)
+      {:status 302
+       :headers {"Location " (str "/auth/login")}})))
 
 (defn wrap-auth [handler]
-  (let [backend (session-backend)]
+  (let [backend (backends/jws {:secret secret :options {:alg :hs512}})]
     (-> handler
         (wrap-authentication backend)
         (wrap-authorization backend))))
+
+(defn wrap-restricted [handler]
+  (restrict handler {:handler authenticated?
+                     :on-error on-error}))
 
 (defn wrap-base [handler]
   (-> ((:middleware defaults) handler)

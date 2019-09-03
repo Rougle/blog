@@ -7,6 +7,7 @@
     [reitit.ring.middleware.muuntaja :as muuntaja]
     [reitit.ring.middleware.multipart :as multipart]
     [reitit.ring.middleware.parameters :as parameters]
+    [buddy.auth :refer [authenticated? throw-unauthorized]]
     [blogger.middleware.formats :as formats]
     [blogger.middleware.exception :as exception]
     [ring.util.http-response :refer :all]
@@ -14,24 +15,25 @@
     [blogger.routes.services.blog :as blog]
     [blogger.routes.services.auth :as auth]
     [clojure.spec.alpha :as s]
-    [clojure.tools.logging :as log]))
+    [clojure.tools.logging :as log]
+    [blogger.middleware :as middleware]))
 
 (s/def ::id uuid?)
+(s/def ::username string?)
 (s/def ::pass string?)
-(s/def ::author_id uuid?)
+(s/def ::author string?)
 (s/def ::header string?)
 (s/def ::summary string?)
 (s/def ::content string?)
-(s/def ::username string?)
 (s/def ::first_name string?)
 (s/def ::last_name string?)
 (s/def ::created string?)
 (s/def ::last_modified string?)
 
-(s/def ::new_user (s/keys :req-un [::pass ::username ::first_name ::last_name]))
-(s/def ::user (s/keys :req-un [::id ::pass ::username ::first_name ::last_name]))
-(s/def ::new_entry (s/keys :req-un [::author_id ::header ::summary ::content]))
-(s/def ::entry (s/keys :req-un [::id ::author_id ::created ::last_modified ::header ::summary ::content ::first_name ::last_name]))
+(s/def ::new_user (s/keys :req-un [::pass ::first_name ::last_name]))
+(s/def ::user (s/keys :req-un [::username ::pass ::first_name ::last_name]))
+(s/def ::new_entry (s/keys :req-un [::author ::header ::summary ::content]))
+(s/def ::entry (s/keys :req-un [::id ::author ::created ::last_modified ::header ::summary ::content ::first_name ::last_name]))
 (s/def ::entries (s/coll-of ::entry))
 
 (defn service-routes []
@@ -70,8 +72,7 @@
               :config {:validator-url nil}})}]]
 
 
-   ;; TODO Add authentication
-   ;; TODO Having username and id is redundant. Rename username into id.
+   ;; TODO Create handler namespace for handler functions
    ["/auth"
     {:swagger {:tags ["auth"]}}
 
@@ -79,24 +80,18 @@
       {:post {:summary    "Registers new user"
               :parameters {:body ::new_user}
               :responses  {201 {:body {:res string?}}}
-              :handler    (fn [request]
-                            (let [{{{:keys [pass username first_name last_name]} :body} :parameters} request
-                                  session (:session request)]
-                            (auth/register! session pass username first_name last_name)))}}]
+              :handler    (fn [{{{:keys [username pass first_name last_name]} :body} :parameters}]
+                            (auth/register! username pass first_name last_name) )}}]
       ["/login"
        {:post {:summary    "Login user"
                :parameters {:header {:authorization string?}}
-               :responses  {201 {:body {:res string?}}}
-               :handler    (fn [request]
-                             (let [{{{:keys [authorization]} :header} :parameters} request
-                                    session (:session request)]
-                             (auth/login! session authorization)))}}]
+               :responses  {201 {:body {:token string?}}}
+               :handler    (fn [req] (auth/login! req))}}]
       ["/logout"
        {:post {:summary    "Logout user"
                :parameters {:header {:authorization string?}}
                :responses  {201 {:body {:res string?}}}
-               :handler    (fn [request]
-                               (auth/logout!))}}]]
+               :handler    (fn [] ())}}]]
 
   ;; TODO Consider splitting user from the blog-entry query or modifying the spec to better support it
   ;; TODO Consider renaming id -> entry_id for clarity
@@ -110,10 +105,13 @@
                          (blog/get-entries))}}]
     ["/entry"
      {:post {:summary    "Creates a new blog entry"
+             :middleware [middleware/wrap-restricted]
              :parameters {:body ::new_entry}
              :responses  {201 {:body ::entry}}
-             :handler    (fn [{{:keys [body]} :parameters}]
-                           (blog/create-entry! body))}}]
+             :handler    (fn [res]
+                           (let [entry (-> res :parameters :body)]
+                             (blog/create-entry! entry)))
+             }}]
 
     ["/entry/:id"
      {:get    {:summary    "Gets a single entry by id"
@@ -125,6 +123,7 @@
                }
 
       :delete {:summary    "Deletes a blog entry"
+               :middleware [middleware/wrap-restricted]
                :parameters {:path {:id uuid?}}
                :responses  {204 {:res any?}
                             404 {:body {:message string?}}}
@@ -133,6 +132,7 @@
                }
 
       :post   {:summary    "Updates a blog entry"
+               :middleware [middleware/wrap-restricted]
                :parameters {:path {:id uuid?}
                             :body {:header string? :summary string? :content string?}}
                :responses  {200 {:body {:body ::entry}}

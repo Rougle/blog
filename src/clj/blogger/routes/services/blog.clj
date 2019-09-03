@@ -11,12 +11,12 @@
     (ok entry)
     (not-found {:message "Couldn't find entry with given id"})))
 
-(defn create-entry! [{:keys [author_id header summary content]}]
+(defn create-entry! [{:keys [author header summary content]}]
   (try
     (let [id (java.util.UUID/randomUUID)]
       (db/create-entry!
         {:id            id
-         :author_id     author_id
+         :author        author
          :created       (java.util.Date.)
          :last_modified (java.util.Date.)
          :header        header
