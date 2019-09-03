@@ -1,6 +1,9 @@
 (ns blogger.ajax
   (:require
     [ajax.core :as ajax]
+    [blogger.components.auth :as auth]
+    [blogger.components.session :as s]
+    [alandipert.storage-atom :refer [local-storage clear-local-storage!]]
     [luminus-transit.time :as time]
     [cognitect.transit :as transit]))
 
@@ -10,7 +13,10 @@
 (defn default-headers [request]
   (if (local-uri? request)
     (-> request
-        (update :headers #(merge {"Accept" "application/transit+json" "x-csrf-token" js/csrfToken} %)))
+        (update :headers #(merge {"Accept" "application/transit+json"
+                                  "x-csrf-token" js/csrfToken}
+                                 (when-let [token (:token @s/session)]
+                                   {"Authorization" (str "Token " token)}) %)))
     request))
 
 ;; injects transit serialization config into request options
