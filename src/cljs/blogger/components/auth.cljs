@@ -74,8 +74,6 @@
 (defn user-logout []
   (fn []
     (when-let [token (:token @s/session)]
-      [:ul.nav.navbar-nav.pull-xs-right
-       [:li.nav-item
-        [:a.dropdown-item.btn
-         {:on-click #(clear-local-storage!)}
-         [:div "sign out"]]]])))
+      [:a.navbar-item.sign-out
+        {:on-click #(clear-local-storage!)}
+        "sign out"])))

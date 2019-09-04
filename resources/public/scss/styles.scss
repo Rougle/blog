@@ -1,5 +1,8 @@
 
 
+
+$light-dark: #3f3f3f;
+
 .blog-preview {
     margin: 15px;
 }
@@ -73,4 +76,56 @@ textarea {
     border: 1px solid #ccc;
     border-radius: 4px;
     box-sizing: border-box;
+}
+body {
+
+}
+
+#app {
+    width: 75%;
+    margin: auto;
+
+}
+
+h1 {
+}
+
+#navbar {
+    width: 75%;
+    margin-left: auto;
+    margin-right: auto;
+    margin-top: 20px;
+
+    .navbar {
+        padding-left: 12px;
+        padding-right: 12px;
+
+        .navbar-menu {
+            .navbar-start {
+                margin :auto;
+            }
+        }
+    }
+
+    .navbar-image {
+        height: 350px;
+        overflow: hidden;
+    }
+}
+
+.header-separator {
+    margin: 8px;
+    border-top: 2px solid $light-dark;
+
+}
+
+.site-header {
+    font-size: 100px;
+    text-align: center;
+}
+
+.sign-out {
+    position: absolute;
+    right: 10px;
+    top: 7px;
 }

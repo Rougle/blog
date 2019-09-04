@@ -19,10 +19,11 @@
   (ajax/GET "/api/blog/entries" {:handler #(reset! entries %)})
   (fn []
     [:div
-     [:div.form-btn-group
-      [:a {:href "#/entry/post"}
-       [:button.btn.btn-primary
-        "New Entry"]]]
+     (if (:token @s/session)
+       [:div.form-btn-group
+        [:a {:href "#/entry/post"}
+         [:button.btn.btn-primary
+          "New Entry"]]])
      (for [entry @entries]
        (let [{:keys [id]} entry]
          [:div {:key id}
@@ -44,13 +45,14 @@
         (when-let [message (:message @error)]
           [:div.alert.alert-danger (str message " - Check network-tab for details.")])
         [:div
-         [:div.form-btn-group
-          [:button.btn.btn-danger
-           {:on-click #(delete-entry! id error)}
-           "Delete"]
-          [:a {:href (str "#/entry/edit/" id)}
-           [:button.btn.btn-primary
-            "Edit"]]]
+         (if (:token @s/session)
+           [:div.form-btn-group
+            [:button.btn.btn-danger
+             {:on-click #(delete-entry! id error)}
+             "Delete"]
+            [:a {:href (str "#/entry/edit/" id)}
+             [:button.btn.btn-primary
+              "Edit"]]])
          [:div
           [:h1 header]
           [:p [:small (str "By " first_name " " last_name " on " created)]]

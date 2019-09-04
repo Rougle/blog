@@ -9,10 +9,12 @@
     [reitit.core :as reitit]
     [clojure.string :as string]
     [blogger.components.blog :as blog]
-    [blogger.components.auth :as auth])
+    [blogger.components.auth :as auth]
+    [blogger.components.contact :as contact]
+    [blogger.components.about :as about])
   (:import goog.History))
 
-(defonce session (r/atom {:page :home}))
+(defonce session (r/atom {:page :list-entries}))
 (defonce match (r/atom nil))
 
 (defn nav-link [uri title page]
@@ -23,25 +25,28 @@
 
 (defn navbar []
   (r/with-let [expanded? (r/atom false)]
-    [:nav.navbar.is-info>div.container
-     [:div.navbar-brand
-      [:a.navbar-item {:href "/" :style {:font-weight :bold}} "blogger"]
-      [:span.navbar-burger.burger
-       {:data-target :nav-menu
-        :on-click #(swap! expanded? not)
-        :class (when @expanded? :is-active)}
-       [:span][:span][:span]]]
-     [:div#nav-menu.navbar-menu
-      {:class (when @expanded? :is-active)}
-      [:div.navbar-start
-       [nav-link "#/" "Home" :home]
-       [nav-link "#/entries" "Blog" :list-entries]
-       [nav-link "#/about" "About" :about]]
-      [(auth/user-logout)]]]))
+    [:div
+     [:h1.site-header "Devblog"]
+     [:hr.header-separator]
+     [:nav.navbar>div.container
+      [:div#nav-menu.navbar-menu
+       {:class (when @expanded? :is-active)}
+       [:div.navbar-start
+        [nav-link "#/" "Blog" :list-entries]
+        [nav-link "#/about" "About" :about]
+        [nav-link "#/contact" "Contact" :contact]]
+       [(auth/user-logout)]]]
+
+
+     [:hr.header-separator]]))
 
 (defn about-page []
   [:section.section>div.container>div.content
-   [:img {:src "/img/warning_clojure.png"}]])
+   [(about/about)]])
+
+(defn contact-page []
+  [:section.section>div.container>div.content
+   [(contact/contact)]])
 
 (defn entries-list []
   [:section.section>div.container>div.content
@@ -69,20 +74,15 @@
   [:section.section>div.container>div.content
    [(auth/login-form)]])
 
-(defn home-page []
-  [:section.section>div.container>div.content
-   (when-let [docs (:docs @session)]
-     [:div {:dangerouslySetInnerHTML {:__html (md->html docs)}}])])
-
 (def pages
-  {:home #'home-page
-   :list-entries #'entries-list
+  {:list-entries #'entries-list
    :view-entry #'entry-view
    :edit-entry #'edit-entry
    :post-entry #'new-entry
    :register #'register
    :login #'login
-   :about #'about-page})
+   :about #'about-page
+   :contact #'contact-page})
 
 (defn page []
   [(pages (:page @session))])
@@ -92,14 +92,14 @@
 
 (def router
   (reitit/router
-    [["/" :home]
-     ["/entries" :list-entries]
+    [["/" :list-entries]
      ["/entry/view/:id" :view-entry]
      ["/entry/edit/:id" :edit-entry]
      ["/entry/post" :post-entry]
      ["/auth/register" :register]
      ["/auth/login" :login]
-     ["/about" :about]]))
+     ["/about" :about]
+     ["/contact" :contact]]))
 
 ;;TODO There should be a better way to pass path params to components
 (defn match-route [uri]
