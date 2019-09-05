@@ -1,15 +1,15 @@
 (ns blogger.routes.services.blog
   (:require [blogger.db.core :as db]
             [clojure.tools.logging :as log]
-            [ring.util.http-response :refer :all]))
+            [ring.util.http-response :as response]))
 
 (defn get-entries []
-  (ok (db/get-entries)))
+  (response/ok (db/get-entries)))
 
 (defn get-entry [id]
   (if-let [entry (db/get-entry {:id id})]
-    (ok entry)
-    (not-found {:message "Couldn't find entry with given id"})))
+    (response/ok entry)
+    (response/not-found {:message "Couldn't find entry with given id"})))
 
 (defn create-entry! [{:keys [author header summary content]}]
   (try
@@ -22,22 +22,25 @@
          :header        header
          :summary       summary
          :content       content})
-      (ok (db/get-entry {:id id})))
+      (response/ok (db/get-entry {:id id})))
     (catch Exception e
-      (log/error e))))
+      (log/error e)
+      (response/internal-server-error {:message "Internal server error"}))))
 
 (defn update-entry! [id header summary content]
   (try
-    (if (== 1 (db/update-entry! {:id id :header header :summary summary :content content}))
+    (if (= 1 (db/update-entry! {:id id :header header :summary summary :content content}))
       (db/get-entry {:id id})
-      (not-found {:message "Couldn't find entry with given id"}))
+      (response/not-found {:message "Couldn't find entry with given id"}))
     (catch Exception e
-      (log/error e))))
+      (log/error e)
+      (response/internal-server-error {:message "Internal server error"}))))
 
 (defn delete-entry! [id]
   (try
-    (if (== 1 (db/delete-entry! {:id id}))
-      (no-content)
-      (not-found {:message "Couldn't find entry with given id"}))
+    (if (= 1 (db/delete-entry! {:id id}))
+      (response/no-content)
+      (response/not-found {:message "Couldn't find entry with given id"}))
     (catch Exception e
-      (log/error e))))
+      (log/error e)
+      (response/internal-server-error {:message "Internal server error"}))))

@@ -2,7 +2,6 @@
   (:require [blogger.db.core :as db]
             [ring.util.http-response :as response]
             [buddy.hashers :as hashers]
-            [buddy.sign.jws :as jws]
             [buddy.sign.jwt :as jwt]
             [buddy.sign.util :refer [to-timestamp]]
             [clj-time.core :as t]
@@ -11,32 +10,19 @@
 (defn get-users []
   (db/get-users))
 
-(defn handle-registration-error [e]
-  (if (and
-        (instance? java.sql.SQLException e)
-        (-> e (.getNextException)
-            (.getMessage)
-            (.startsWith "ERROR: duplicate key value")))
-    (response/precondition-failed
-      {:result :error
-       :message "user with the selected ID already exists"})
-    (do
-      (log/error e)
-      (response/internal-server-error
-        {:result :error
-         :message "server error occurred while adding the user"}))))
-
-(defn register! [username pass first_name last_name]
-  (try
-    (db/create-user!
-      {:username username
-       :first_name first_name
-       :last_name last_name
-       :pass (hashers/encrypt pass)})
-    (-> {:result :ok}
-        (response/ok))
-    (catch Exception e
-      (handle-registration-error e))))
+(defn register! [username pass secret first_name last_name]
+  (if (not (= secret (:register-secret env)))
+    (response/forbidden {:message "Secret didn't match"})
+    (try
+      (db/create-user!
+        {:username username
+         :first_name first_name
+         :last_name last_name
+         :pass (hashers/encrypt pass)})
+      (response/ok)
+      (catch Exception e
+        (response/internal-server-error
+          {:message "Server error occurred while adding user. The username might be taken?"})))))
 
 (defn decode-auth [encoded]
   (let [auth (second (.split encoded " "))]
@@ -57,8 +43,7 @@
   (let [[username pass] (decode-auth (-> req :parameters :header :authorization ))]
     {:username username :pass pass}))
 
-;;TODO Secret and alg options to env var
-(defn create-auth-token [auth-conf credentials]
+(defn create-auth-token [credentials]
   (let [[ok? res] (authenticate credentials)
         exp (-> (t/plus (t/now) (t/days 1)) (to-timestamp))
         jwt-secret (-> env :jwt-secret)
@@ -68,7 +53,7 @@
       [false res])))
 
 (defn login! [req]
-  (let [[ok? res] (create-auth-token (:auth-conf req) (parse-authorization req))]
+  (let [[ok? res] (create-auth-token (parse-authorization req))]
     (if ok?
-      {:status 201 :body res}
-      {:status 401 :body res})))
+      (response/ok res)
+      (response/forbidden res))))

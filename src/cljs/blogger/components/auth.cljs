@@ -29,6 +29,7 @@
         [c/text-input "Last name" :last_name "Enter last name" fields]
         [c/text-input "Username" :username "Enter username" fields]
         [c/password-input "Password" :pass "Enter password" fields]
+        [c/password-input "Secret" :secret "Enter secret" fields]
         [:div.form-btn-group
          [:a {:href "#/entries"}
           [:button.btn.btn-danger

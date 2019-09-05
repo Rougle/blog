@@ -11,7 +11,6 @@
     [blogger.middleware.formats :as formats]
     [blogger.middleware.exception :as exception]
     [ring.util.http-response :refer :all]
-    [clojure.java.io :as io]
     [blogger.routes.services.blog :as blog]
     [blogger.routes.services.auth :as auth]
     [clojure.spec.alpha :as s]
@@ -21,6 +20,7 @@
 (s/def ::id uuid?)
 (s/def ::username string?)
 (s/def ::pass string?)
+(s/def ::secret string?)
 (s/def ::author string?)
 (s/def ::header string?)
 (s/def ::summary string?)
@@ -30,7 +30,7 @@
 (s/def ::created string?)
 (s/def ::last_modified string?)
 
-(s/def ::new_user (s/keys :req-un [::pass ::first_name ::last_name]))
+(s/def ::new_user (s/keys :req-un [::secret ::pass ::first_name ::last_name]))
 (s/def ::user (s/keys :req-un [::username ::pass ::first_name ::last_name]))
 (s/def ::new_entry (s/keys :req-un [::author ::header ::summary ::content]))
 (s/def ::entry (s/keys :req-un [::id ::author ::created ::last_modified ::header ::summary ::content ::first_name ::last_name]))
@@ -71,30 +71,25 @@
              {:url    "/api/swagger.json"
               :config {:validator-url nil}})}]]
 
-
-   ;; TODO Create handler namespace for handler functions
    ["/auth"
     {:swagger {:tags ["auth"]}}
 
      ["/register"
       {:post {:summary    "Registers new user"
               :parameters {:body ::new_user}
-              :responses  {201 {:body {:res string?}}}
-              :handler    (fn [{{{:keys [username pass first_name last_name]} :body} :parameters}]
-                            (auth/register! username pass first_name last_name) )}}]
+              :responses  {201 {:body string?}
+                           401 {:body string?}
+                           500 {:body string?}}
+              :handler    (fn [{{{:keys [username pass secret first_name last_name]} :body} :parameters}]
+                            (auth/register! username pass secret first_name last_name) )}}]
       ["/login"
        {:post {:summary    "Login user"
                :parameters {:header {:authorization string?}}
-               :responses  {201 {:body {:token string?}}}
-               :handler    (fn [req] (auth/login! req))}}]
-      ["/logout"
-       {:post {:summary    "Logout user"
-               :parameters {:header {:authorization string?}}
-               :responses  {201 {:body {:res string?}}}
-               :handler    (fn [] ())}}]]
+               :responses  {201 {:body string?}
+                            401 {:body string?}}
+               :handler    (fn [req] (auth/login! req))}}]]
 
-  ;; TODO Consider splitting user from the blog-entry query or modifying the spec to better support it
-  ;; TODO Consider renaming id -> entry_id for clarity
+   ;; TODO Consider splitting user from the blog-entry query or modifying the spec to better support it
    ["/blog"
     {:swagger {:tags ["blog"]}}
 
@@ -107,7 +102,9 @@
      {:post {:summary    "Creates a new blog entry"
              :middleware [middleware/wrap-restricted]
              :parameters {:body ::new_entry}
-             :responses  {201 {:body ::entry}}
+             :responses  {201 {:body ::entry}
+                          400 {:body string?}
+                          500 {:body string?}}
              :handler    (fn [res]
                            (let [entry (-> res :parameters :body)]
                              (blog/create-entry! entry)))
@@ -117,7 +114,7 @@
      {:get    {:summary    "Gets a single entry by id"
                :parameters {:path {:id uuid?}}
                :responses  {200 {:body ::entry}
-                            404 {:body {:message string?}}}
+                            404 {:body string?}}
                :handler    (fn [{{{:keys [id]} :path} :parameters}]
                              (blog/get-entry id))
                }
@@ -126,7 +123,8 @@
                :middleware [middleware/wrap-restricted]
                :parameters {:path {:id uuid?}}
                :responses  {204 {:res any?}
-                            404 {:body {:message string?}}}
+                            404 {:body string?}
+                            500 {:body string?}}
                :handler    (fn [{{{:keys [id]} :path} :parameters}]
                              (blog/delete-entry! id))
                }
@@ -136,7 +134,8 @@
                :parameters {:path {:id uuid?}
                             :body {:header string? :summary string? :content string?}}
                :responses  {200 {:body {:body ::entry}}
-                            404 {:body {:message string?}}}
+                            404 {:body string?}
+                            500 {:body string?}}
                :handler    (fn [{{{:keys [id]} :path}                     :parameters
                                  {{:keys [header summary content]} :body} :parameters}]
                              (blog/update-entry! id header summary content))
