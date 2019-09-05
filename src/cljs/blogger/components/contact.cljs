@@ -1,6 +1,6 @@
 (ns blogger.components.contact)
 
-
+;; TODO Content here should have similar editor to blog entries
 (defn contact []
   (fn []
     [:h1 "Contact"]
