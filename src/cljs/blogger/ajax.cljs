@@ -1,7 +1,6 @@
 (ns blogger.ajax
   (:require
     [ajax.core :as ajax]
-    [blogger.components.auth :as auth]
     [blogger.components.session :as s]
     [alandipert.storage-atom :refer [local-storage clear-local-storage!]]
     [luminus-transit.time :as time]

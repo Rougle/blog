@@ -13,7 +13,7 @@
              {:params        @fields
               :handler       #(do
                                 (reset! fields {})
-                                (s/set-hash! (str "/entries")))
+                                (s/set-hash! (str "/")))
               :error-handler #(reset! error {:message (:status-text %)})}))
 
 (defn register-form []
@@ -31,7 +31,7 @@
         [c/password-input "Password" :pass "Enter password" fields]
         [c/password-input "Secret" :secret "Enter secret" fields]
         [:div.form-btn-group
-         [:a {:href "#/entries"}
+         [:a {:href "#/"}
           [:button.btn.btn-danger
            "Cancel"]]
          [:button.btn.btn-primary
@@ -50,7 +50,7 @@
                                   (reset! fields {})
                                   (swap! s/session assoc :token (:token %))
                                   (swap! s/session assoc :username username)
-                                  (s/set-hash! (str "/entries")))
+                                  (s/set-hash! (str "/")))
                 :error-handler #(reset! error {:message (:status-text %)})})))
 
 (defn login-form []
@@ -65,7 +65,7 @@
         [c/text-input "Username" :username "Enter username" fields]
         [c/password-input "Password" :pass "Enter password" fields]
         [:div.form-btn-group
-         [:a {:href "#/entries"}
+         [:a {:href "#/"}
           [:button.btn.btn-danger
            "Cancel"]]
          [:button.btn.btn-primary
@@ -74,7 +74,7 @@
 
 (defn user-logout []
   (fn []
-    (when-let [token (:token @s/session)]
+    (if (:token @s/session)
       [:a.navbar-item.sign-out
         {:on-click #(clear-local-storage!)}
         "sign out"])))

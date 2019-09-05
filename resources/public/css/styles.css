@@ -75,9 +75,11 @@ textarea {
       margin-right: 0; }
       #navbar .navbar .navbar-menu .navbar-start {
         margin: auto; }
-  #navbar .navbar-image {
-    height: 350px;
-    overflow: hidden; }
+        #navbar .navbar .navbar-menu .navbar-start .navbar-item:hover {
+          color: grey;
+          background-color: white; }
+        #navbar .navbar .navbar-menu .navbar-start .navbar-item:focus {
+          background-color: white; }
 
 .header-separator {
   margin: 8px;

@@ -105,13 +105,20 @@ h1 {
 
             .navbar-start {
                 margin :auto;
+
+                .navbar-item {
+
+                    &:hover  {
+                        color: grey;
+                        background-color: white;
+                    }
+
+                    &:focus {
+                        background-color: white;
+                    }
+                }
             }
         }
-    }
-
-    .navbar-image {
-        height: 350px;
-        overflow: hidden;
     }
 }
 

@@ -33,9 +33,10 @@
 (defn delete-entry! [id error]
   (reset! error {})
   (ajax/DELETE (str "/api/blog/entry/" id)
-             {:handler #(s/set-hash! "/entries")
+             {:handler #(s/set-hash! "/")
               :error-handler #(reset! error {:message (:status-text %)})}))
 
+;; TODO Put entry content into div instead of p and write entries in HTML format
 (defn entry-view [id]
   (let [data (atom nil)
         error (atom {})]
@@ -83,7 +84,7 @@
         [c/text-input "Summary" :summary "Enter a summary" fields]
         [c/textarea-input "Content" :content "Enter blog content" fields]]
        [:div.form-btn-group
-        [:a {:href "#/entries"}
+        [:a {:href "#/"}
          [:button.btn.btn-danger
           "Cancel"]]
         [:button.btn.btn-primary
