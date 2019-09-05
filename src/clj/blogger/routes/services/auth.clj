@@ -5,10 +5,8 @@
             [buddy.sign.jws :as jws]
             [buddy.sign.jwt :as jwt]
             [buddy.sign.util :refer [to-timestamp]]
-            [buddy.core.keys :as ks]
-            [clojure.tools.logging :as log]
-            [clojure.java.io :as io]
-            [clj-time.core :as t]))
+            [clj-time.core :as t]
+            [blogger.config :refer [env]]))
 
 (defn get-users []
   (db/get-users))
@@ -62,9 +60,11 @@
 ;;TODO Secret and alg options to env var
 (defn create-auth-token [auth-conf credentials]
   (let [[ok? res] (authenticate credentials)
-        exp (-> (t/plus (t/now) (t/days 1)) (to-timestamp))]
+        exp (-> (t/plus (t/now) (t/days 1)) (to-timestamp))
+        jwt-secret (-> env :jwt-secret)
+        jwt-alg (-> env :jwt-alg)]
     (if ok?
-      [true {:token (jwt/sign res "mysupersecret" {:alg :hs512 :exp exp})}]
+      [true {:token (jwt/sign res jwt-secret {:alg jwt-alg :exp exp})}]
       [false res])))
 
 (defn login! [req]

@@ -22,12 +22,10 @@
     [clojure.java.io :as io]
     [buddy.sign.jwt :as jwt]
     [buddy.auth.protocols :as proto]
-    [buddy.auth.http :as http])
+    [buddy.auth.http :as http]
+    [blogger.config :refer [env]])
   (:import
            ))
-
-;; TODO Secret to env var
-(def secret "mysupersecret")
 
 (defn wrap-internal-error [handler]
   (fn [req]
@@ -55,7 +53,7 @@
       ;; since they're not compatible with this middleware
       ((if (:websocket? request) handler wrapped) request))))
 
-(defn on-error [request response]
+(defn on-error [request]
   (error-page
     {:status 403
      :title (str "Access to " (:uri request) " is not authorized")}))
@@ -68,7 +66,7 @@
        :headers {"Location " (str "/auth/login")}})))
 
 (defn wrap-auth [handler]
-  (let [backend (backends/jws {:secret secret :options {:alg :hs512}})]
+  (let [backend (backends/jws {:secret (-> env :jwt-secret) :options {:alg (-> env :jwt-alg)}})]
     (-> handler
         (wrap-authentication backend)
         (wrap-authorization backend))))
