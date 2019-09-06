@@ -30,7 +30,7 @@
 (defn update-entry! [id header summary content]
   (try
     (if (= 1 (db/update-entry! {:id id :header header :summary summary :content content}))
-      (db/get-entry {:id id})
+      (response/ok (db/get-entry {:id id}))
       (response/not-found {:message "Couldn't find entry with given id"}))
     (catch Exception e
       (log/error e)

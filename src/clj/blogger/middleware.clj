@@ -66,7 +66,7 @@
        :headers {"Location " (str "/auth/login")}})))
 
 (defn wrap-auth [handler]
-  (let [backend (backends/jws {:secret (-> env :jwt-secret) :options {:alg (-> env :jwt-alg)}})]
+  (let [backend (backends/jws {:secret (:jwt-secret env) :options {:alg (:jwt-alg env)}})]
     (-> handler
         (wrap-authentication backend)
         (wrap-authorization backend))))

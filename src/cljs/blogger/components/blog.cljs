@@ -43,7 +43,7 @@
         error (atom {})]
     (ajax/GET (str "/api/blog/entry/" id) {:handler #(reset! data %)})
     (fn []
-      (let [{:keys [header summary content first_name last_name created]} @data]
+      (let [{:keys [header content first_name last_name created]} @data]
         (when-let [message (:message @error)]
           [:div.alert.alert-danger (str message " - Check network-tab for details.")])
         [:div

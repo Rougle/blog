@@ -137,6 +137,7 @@
             :responses {200 {:body ::entries}}
             :handler   (fn [_]
                          (blog/get-entries))}}]
+
     ["/entry"
      {:post {:summary    "Creates a new blog entry"
              :middleware [middleware/wrap-restricted]
@@ -144,9 +145,8 @@
              :responses  {201 {:body ::entry}
                           400 {:body string?}
                           500 {:body string?}}
-             :handler    (fn [res]
-                           (let [entry (-> res :parameters :body)]
-                             (blog/create-entry! entry)))
+             :handler    (fn [{{:keys [body]} :parameters}]
+                           (blog/create-entry! body))
              }}]
 
     ["/entry/:id"
@@ -172,7 +172,7 @@
                :middleware [middleware/wrap-restricted]
                :parameters {:path {:id uuid?}
                             :body {:header string? :summary string? :content string?}}
-               :responses  {200 {:body {:body ::entry}}
+               :responses  {200 {:body ::entry}
                             404 {:body string?}
                             500 {:body string?}}
                :handler    (fn [{{{:keys [id]} :path}                     :parameters

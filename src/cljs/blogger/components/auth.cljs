@@ -13,7 +13,7 @@
              {:params        @fields
               :handler       #(do
                                 (reset! fields {})
-                                (s/set-hash! (str "/")))
+                                (s/set-hash! (str "/auth/login")))
               :error-handler #(reset! error {:message (:status-text %)})}))
 
 (defn register-form []

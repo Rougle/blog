@@ -46,8 +46,8 @@
 (defn create-auth-token [credentials]
   (let [[ok? res] (authenticate credentials)
         exp (-> (t/plus (t/now) (t/days 1)) (to-timestamp))
-        jwt-secret (-> env :jwt-secret)
-        jwt-alg (-> env :jwt-alg)]
+        jwt-secret (:jwt-secret env)
+        jwt-alg (:jwt-alg env)]
     (if ok?
       [true {:token (jwt/sign res jwt-secret {:alg jwt-alg :exp exp})}]
       [false res])))
