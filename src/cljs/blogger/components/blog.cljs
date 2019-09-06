@@ -1,6 +1,7 @@
 (ns blogger.components.blog
   (:require [reagent.core :refer [atom]]
             [ajax.core :as ajax]
+            [markdown.core :refer [md->html]]
             [blogger.components.common :as c]
             [blogger.components.session :as s]))
 
@@ -57,8 +58,7 @@
          [:div
           [:h1 header]
           [:p [:small (str "By " first_name " " last_name " on " created)]]
-          [:p summary]
-          [:p content]]]))))
+          [:div {:dangerouslySetInnerHTML {:__html (md->html content) }}]]]))))
 
 (defn post-entry! [fields error]
   (reset! error {})
@@ -81,8 +81,8 @@
        [:h2 "Create a new entry"]
        [:div
         [c/text-input "Header" :header "Enter a header" fields]
-        [c/text-input "Summary" :summary "Enter a summary" fields]
-        [c/textarea-input "Content" :content "Enter blog content" fields]]
+        [c/text-input "Summary - this will be only shown in preview" :summary "Enter a summary" fields]
+        [c/textarea-input "Content" :content "Enter blog content in markup format" fields]]
        [:div.form-btn-group
         [:a {:href "#/"}
          [:button.btn.btn-danger
@@ -107,11 +107,13 @@
     (ajax/GET (str "/api/blog/entry/" id) {:handler #(reset! fields %)})
     (fn []
       [:div
+       (when-let [message (:message @error)]
+         [:div.alert.alert-danger (str message " - Check network-tab for details.")])
        [:h2 "Edit entry"]
        [:div
         [c/text-input "Header" :header "Enter a header" fields]
-        [c/text-input "Summary" :summary "Enter a summary" fields]
-        [c/textarea-input "Content" :content "Enter blog content" fields]]
+        [c/text-input "Summary - this will be only shown in preview" :summary "Enter a summary" fields]
+        [c/textarea-input "Content" :content "Enter blog content in markup format" fields]]
        [:div.form-btn-group
         [:a {:href (str "#/entry/view/" id)}
          [:button.btn.btn-danger

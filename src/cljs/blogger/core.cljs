@@ -10,8 +10,7 @@
     [clojure.string :as string]
     [blogger.components.blog :as blog]
     [blogger.components.auth :as auth]
-    [blogger.components.contact :as contact]
-    [blogger.components.about :as about])
+    [blogger.components.content :as content])
   (:import goog.History))
 
 (defonce session (r/atom {:page :list-entries}))
@@ -42,11 +41,11 @@
 
 (defn about-page []
   [:section.section>div.container>div.content
-   [(about/about)]])
+   [(content/content "about")]])
 
 (defn contact-page []
   [:section.section>div.container>div.content
-   [(contact/contact)]])
+   [(content/content "contact")]])
 
 (defn entries-list []
   [:section.section>div.container>div.content

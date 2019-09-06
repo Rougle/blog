@@ -54,8 +54,27 @@ FROM blog_entries
 INNER JOIN users ON users.username = blog_entries.author
 WHERE blog_entries.id = :id
 
-
 -- :name delete-entry! :! :n
 -- :doc deletes blog entry with given id
 DELETE FROM blog_entries
+WHERE id = :id
+
+-- PAGE CONTENT
+
+-- :name create-content! :! :n
+-- :doc creates a new content
+INSERT INTO page_content
+(id, content)
+VALUES (:id, :content)
+
+-- :name update-content! :! :n
+-- :doc updates an existing content
+UPDATE page_content
+SET content = :content
+WHERE id = :id
+
+-- :name get-content :? :1
+-- :doc gets content by id
+SELECT content
+FROM page_content
 WHERE id = :id

@@ -13,6 +13,7 @@
     [ring.util.http-response :refer :all]
     [blogger.routes.services.blog :as blog]
     [blogger.routes.services.auth :as auth]
+    [blogger.routes.services.content :as content]
     [clojure.spec.alpha :as s]
     [clojure.tools.logging :as log]
     [blogger.middleware :as middleware]))
@@ -70,6 +71,44 @@
      {:get (swagger-ui/create-swagger-ui-handler
              {:url    "/api/swagger.json"
               :config {:validator-url nil}})}]]
+
+   ;; TODO More descriptive name for contact and about page content?
+   ["/content"
+    {:swagger {:tags ["content"]}}
+
+    ["/"
+     {:post {:summary    "Creates a new blog entry"
+             :middleware [middleware/wrap-restricted]
+             :parameters {:body {:id string? :content string?}}
+             :responses  {201 {:body {:content string?}}
+                          400 {:body string?}
+                          500 {:body string?}}
+             :handler    (fn [{{{:keys [id content]} :body} :parameters}]
+                             (content/create-content! id content))
+             }}]
+
+    ["/:id"
+     {:get    {:summary    "Gets content by id"
+               :parameters {:path {:id string?}}
+               :responses  {200 {:body {:content string?}}
+                            404 {:body string?}}
+               :handler    (fn [{{{:keys [id]} :path} :parameters}]
+                             (content/get-content id))
+               }
+
+      :post   {:summary    "Updates a page content"
+               :middleware [middleware/wrap-restricted]
+               :parameters {:path {:id string?}
+                            :body {:content string?}}
+               :responses  {200 {:body {:content string?}}
+                            404 {:body string?}
+                            500 {:body string?}}
+               :handler    (fn [{{{:keys [id]} :path}      :parameters
+                                 {{:keys [content]} :body} :parameters}]
+                             (content/update-content! id content))
+               }
+      }]]
+
 
    ["/auth"
     {:swagger {:tags ["auth"]}}
