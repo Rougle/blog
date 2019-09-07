@@ -81,6 +81,18 @@ textarea {
         #navbar .navbar .navbar-menu .navbar-start .navbar-item:focus {
           background-color: white; }
 
+.btn-header-edit {
+  position: absolute;
+  top: 85px;
+  right: 180px; }
+
+.header-edit-form {
+  margin: auto;
+  width: 60%; }
+  .header-edit-form input {
+    width: 50%;
+    margin: 6px; }
+
 .header-separator {
   margin: 8px;
   border-top: 2px solid #3f3f3f; }

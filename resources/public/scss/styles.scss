@@ -87,9 +87,6 @@ body {
 
 }
 
-h1 {
-}
-
 #navbar {
     width: 75%;
     margin-left: auto;
@@ -119,6 +116,22 @@ h1 {
                 }
             }
         }
+    }
+}
+
+.btn-header-edit {
+    position: absolute;
+    top: 85px;
+    right: 180px;
+}
+
+.header-edit-form {
+    margin: auto;
+    width: 60%;
+
+    input {
+        width: 50%;
+        margin: 6px;
     }
 }
 

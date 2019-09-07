@@ -5,7 +5,6 @@
     [goog.history.EventType :as HistoryEventType]
     [markdown.core :refer [md->html]]
     [blogger.ajax :as ajax]
-    [ajax.core :refer [GET POST]]
     [reitit.core :as reitit]
     [clojure.string :as string]
     [blogger.components.blog :as blog]
@@ -25,7 +24,7 @@
 (defn navbar []
   (r/with-let [expanded? (r/atom false)]
     [:div
-     [:h1.site-header "Devblog"]
+     [(content/header)]
      [:hr.header-separator]
      [:nav.navbar>div.container
       [:div#nav-menu.navbar-menu
@@ -35,9 +34,9 @@
         [nav-link "#/about" "About" :about]
         [nav-link "#/contact" "Contact" :contact]]
        [(auth/user-logout)]]]
-
-
      [:hr.header-separator]]))
+
+;;TODO Add fancy transition effects to components
 
 (defn about-page []
   [:section.section>div.container>div.content
@@ -51,19 +50,14 @@
   [:section.section>div.container>div.content
    [(blog/entries-list)]])
 
-(defn entry-view []
+(defn view-entry []
   (let [{{:keys [id]} :path-params} @match]
     [:section.section>div.container>div.content
-     [(blog/entry-view id)]]))
+     [(blog/entry id)]]))
 
 (defn new-entry []
   [:section.section>div.container>div.content
-   [(blog/new-entry-form)]])
-
-(defn edit-entry []
-  (let [{{:keys [id]} :path-params} @match]
-    [:section.section>div.container>div.content
-     [(blog/edit-entry-form id)]]))
+   [(blog/create-entry)]])
 
 (defn register []
   [:section.section>div.container>div.content
@@ -75,8 +69,7 @@
 
 (def pages
   {:list-entries #'entries-list
-   :view-entry #'entry-view
-   :edit-entry #'edit-entry
+   :view-entry #'view-entry
    :post-entry #'new-entry
    :register #'register
    :login #'login
@@ -93,7 +86,6 @@
   (reitit/router
     [["/" :list-entries]
      ["/entry/view/:id" :view-entry]
-     ["/entry/edit/:id" :edit-entry]
      ["/entry/post" :post-entry]
      ["/auth/register" :register]
      ["/auth/login" :login]
@@ -122,8 +114,6 @@
 
 ;; -------------------------
 ;; Initialize app
-(defn fetch-docs! []
-  (GET "/docs" {:handler #(swap! session assoc :docs %)}))
 
 (defn mount-components []
   (r/render [#'navbar] (.getElementById js/document "navbar"))
@@ -131,6 +121,5 @@
 
 (defn init! []
   (ajax/load-interceptors!)
-  (fetch-docs!)
   (hook-browser-navigation!)
   (mount-components))
