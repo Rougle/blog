@@ -9,11 +9,11 @@
 (defn entry-preview [entry]
   (fn []
     (let [{:keys [id header summary first_name last_name created]} entry]
-        [:div.blog-preview
-         [:a {:href (str "#/entry/view/" id)}
-          [:h1 header]]
-         [:p summary]
-         [:p [:small (str "By " first_name " " last_name " on " created)]]])))
+      [:div.blog-preview
+       [:a {:href (str "#/entry/view/" id)}
+        [:h1 header]]
+       [:p summary]
+       [:p [:small (str "By " first_name " " last_name " on " created)]]])))
 
 (defn entries-list []
   (let [entries (atom [])]
@@ -34,31 +34,68 @@
 (defn delete-entry! [id error]
   (reset! error {})
   (ajax/DELETE (str "/api/blog/entry/" id)
-             {:handler #(s/set-hash! "/")
+               {:handler #(s/set-hash! "/")
+                :error-handler #(reset! error {:message (:status-text %)})}))
+
+(defn update-entry! [data fields editing? error]
+  (reset! error {})
+  (ajax/POST (str "/api/blog/entry/" (:id @fields))
+             {:params @fields
+              :handler #(do
+                          (reset! data %)
+                          (reset! editing? false))
               :error-handler #(reset! error {:message (:status-text %)})}))
 
-;; TODO Put entry content into div instead of p and write entries in HTML format
-(defn entry-view [id]
-  (let [data (atom nil)
-        error (atom {})]
-    (ajax/GET (str "/api/blog/entry/" id) {:handler #(reset! data %)})
+(defn entry-fields [fields]
+  [:div
+   [c/text-input "Header" :header "Enter a header" fields]
+   [c/text-input "Summary - this will be only shown in preview" :summary "Enter a summary" fields]
+   [c/textarea-input "Content" :content "Enter blog content in markup" fields]])
+
+(defn edit-entry [data editing? error]
+  (let [fields (atom @data)]
     (fn []
-      (let [{:keys [header content first_name last_name created]} @data]
-        (when-let [message (:message @error)]
-          [:div.alert.alert-danger (str message " - Check network-tab for details.")])
-        [:div
-         (if (:token @s/session)
-           [:div.form-btn-group
-            [:button.btn.btn-danger
-             {:on-click #(delete-entry! id error)}
-             "Delete"]
-            [:a {:href (str "#/entry/edit/" id)}
-             [:button.btn.btn-primary
-              "Edit"]]])
-         [:div
-          [:h1 header]
-          [:p [:small (str "By " first_name " " last_name " on " created)]]
-          [:div {:dangerouslySetInnerHTML {:__html (md->html content) }}]]]))))
+      [:div
+       [:h2 "Edit entry"]
+       [entry-fields fields]
+       [:div.form-btn-group
+        [:button.btn.btn-danger
+         {:on-click #(reset! editing? false)}
+         "Cancel"]
+        [:button.btn.btn-primary
+         {:on-click #(update-entry! data fields editing? error)}
+         "Post"]]])))
+
+(defn view-entry [fields]
+  (fn []
+    [:div
+     (let [{:keys [header content first_name last_name created]} @fields]
+       [:div
+        [:h1 header]
+        [:p [:small (str "By " first_name " " last_name " on " created)]]
+        [:div {:dangerouslySetInnerHTML {:__html (md->html content) }}]])]))
+
+(defn entry [id]
+  (let [data (atom nil)
+        editing? (atom false)
+        error (atom {})]
+    (ajax/GET (str "/api/blog/entry/" id)
+              {:handler #(reset! data %)
+               :error-handler #(reset! error %)})
+    (fn []
+      [:div
+       [(c/request-error error)]
+       (if (and (:token @s/session) (not @editing?))
+         [:div.form-btn-group
+          [:button.btn.btn-danger
+           {:on-click #(delete-entry! id error)}
+           "Delete"]
+          [:button.btn.btn-primary
+           {:on-click #(reset! editing? true)}
+           "Edit"]])
+       (if @editing?
+         [(edit-entry data editing? error)]
+         [(view-entry data)])])))
 
 (defn post-entry! [fields error]
   (reset! error {})
@@ -70,54 +107,19 @@
               :error-handler #(reset! error {:message (:status-text %)})}))
 
 ;; TODO Common client-side/server-side checks to cljc
-(defn new-entry-form []
+(defn create-entry []
   (let [fields (atom {})
         error (atom {})]
     (swap! fields assoc :author (:username @s/session))
     (fn []
       [:div
-       (when-let [message (:message @error)]
-         [:div.alert.alert-danger (str message " - Check network-tab for details.")])
+       [(c/request-error error)]
        [:h2 "Create a new entry"]
-       [:div
-        [c/text-input "Header" :header "Enter a header" fields]
-        [c/text-input "Summary - this will be only shown in preview" :summary "Enter a summary" fields]
-        [c/textarea-input "Content" :content "Enter blog content in markup format" fields]]
+       [entry-fields fields]
        [:div.form-btn-group
         [:a {:href "#/"}
          [:button.btn.btn-danger
           "Cancel"]]
         [:button.btn.btn-primary
          {:on-click #(post-entry! fields error)}
-         "Post"]]])))
-
-(defn update-entry! [id fields error]
-  (reset! error {})
-  (ajax/POST (str "/api/blog/entry/" id)
-             {:params @fields
-              :handler #(do
-                          (reset! fields {})
-                          (s/set-hash! (str "/entry/view/" id)))
-              :error-handler #(reset! error {:message (:status-text %)})}))
-
-;; TODO Client-side checks
-(defn edit-entry-form [id]
-  (let [fields (atom {})
-        error (atom {})]
-    (ajax/GET (str "/api/blog/entry/" id) {:handler #(reset! fields %)})
-    (fn []
-      [:div
-       (when-let [message (:message @error)]
-         [:div.alert.alert-danger (str message " - Check network-tab for details.")])
-       [:h2 "Edit entry"]
-       [:div
-        [c/text-input "Header" :header "Enter a header" fields]
-        [c/text-input "Summary - this will be only shown in preview" :summary "Enter a summary" fields]
-        [c/textarea-input "Content" :content "Enter blog content in markup format" fields]]
-       [:div.form-btn-group
-        [:a {:href (str "#/entry/view/" id)}
-         [:button.btn.btn-danger
-          "Cancel"]]
-        [:button.btn.btn-primary
-         {:on-click #(update-entry! id fields error)}
          "Post"]]])))

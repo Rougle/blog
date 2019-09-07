@@ -10,8 +10,7 @@
 (defn form-input [type label id placeholder fields]
   [:div
    [:label label]
-   [:div
-      [input type id placeholder fields]]])
+   [:div [input type id placeholder fields]]])
 
 (defn text-input [label id placeholder fields]
   (form-input :text label id placeholder fields))
@@ -30,3 +29,8 @@
       :cols 30
       :rows 30
       :on-change #(swap! fields assoc id (-> % .-target .-value))}]]])
+
+(defn request-error [error]
+  (fn []
+    (when-let [message (:message @error)]
+      [:div.alert.alert-danger (str message " - Check network-tab for details.")])))

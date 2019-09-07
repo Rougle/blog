@@ -21,8 +21,7 @@
         error (atom {})]
     (fn []
       [:div
-       (when-let [message (:message @error)]
-         [:div.alert.alert-danger (str message " - Check network-tab for details.")])
+       [(c/request-error error)]
        [:h2 "Register"]
        [:div
         [c/text-input "First name" :first_name "Enter first name" fields]
@@ -50,7 +49,7 @@
                                   (reset! fields {})
                                   (swap! s/session assoc :token (:token %))
                                   (swap! s/session assoc :username username)
-                                  (s/set-hash! (str "/")))
+                                  (s/set-hash! "/"))
                 :error-handler #(reset! error {:message (:status-text %)})})))
 
 (defn login-form []
@@ -58,8 +57,7 @@
         error (atom {})]
     (fn []
       [:div
-       (when-let [message (:message @error)]
-         [:div.alert.alert-danger (str message " - Check network-tab for details.")])
+       [(c/request-error error)]
        [:h2 "Login"]
        [:div
         [c/text-input "Username" :username "Enter username" fields]
@@ -76,5 +74,5 @@
   (fn []
     (if (:token @s/session)
       [:a.navbar-item.sign-out
-        {:on-click #(clear-local-storage!)}
-        "sign out"])))
+       {:on-click #(clear-local-storage!)}
+       "sign out"])))
