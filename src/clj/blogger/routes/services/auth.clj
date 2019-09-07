@@ -5,7 +5,8 @@
             [buddy.sign.jwt :as jwt]
             [buddy.sign.util :refer [to-timestamp]]
             [clj-time.core :as t]
-            [blogger.config :refer [env]]))
+            [blogger.config :refer [env]]
+            [clojure.tools.logging :as log]))
 
 (defn get-users []
   (db/get-users))

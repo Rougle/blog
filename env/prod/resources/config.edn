@@ -1,12 +1,1 @@
-{:prod true
- :port 3000
-
- ; set your database connection URL here
- :database-url
-
- ;; set jwt-sercret and hashing alg
- :jwt-secret
- :jwt-alg :hs512
-
- ;; set registration secret
- :register-secret }
+{:prod true}
