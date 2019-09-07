@@ -81,8 +81,8 @@
              :middleware [middleware/wrap-restricted]
              :parameters {:body {:id string? :content string?}}
              :responses  {201 {:body {:content string?}}
-                          400 {:body string?}
-                          500 {:body string?}}
+                          400 {:body {:message string?}}
+                          500 {:body {:message string?}}}
              :handler    (fn [{{{:keys [id content]} :body} :parameters}]
                              (content/create-content! id content))
              }}]
@@ -91,7 +91,7 @@
      {:get    {:summary    "Gets content by id"
                :parameters {:path {:id string?}}
                :responses  {200 {:body {:content string?}}
-                            404 {:body string?}}
+                            404 {:body {:message string?}}}
                :handler    (fn [{{{:keys [id]} :path} :parameters}]
                              (content/get-content id))
                }
@@ -101,8 +101,8 @@
                :parameters {:path {:id string?}
                             :body {:content string?}}
                :responses  {200 {:body {:content string?}}
-                            404 {:body string?}
-                            500 {:body string?}}
+                            404 {:body {:message string?}}
+                            500 {:body {:message string?}}}
                :handler    (fn [{{{:keys [id]} :path}      :parameters
                                  {{:keys [content]} :body} :parameters}]
                              (content/update-content! id content))
@@ -117,15 +117,15 @@
       {:post {:summary    "Registers new user"
               :parameters {:body ::new_user}
               :responses  {201 {:body string?}
-                           401 {:body string?}
-                           500 {:body string?}}
+                           401 {:body {:message string?}}
+                           500 {:body {:message string?}}}
               :handler    (fn [{{{:keys [username pass secret first_name last_name]} :body} :parameters}]
                             (auth/register! username pass secret first_name last_name) )}}]
       ["/login"
        {:post {:summary    "Login user"
                :parameters {:header {:authorization string?}}
                :responses  {201 {:body string?}
-                            401 {:body string?}}
+                            401 {:body {:message string?}}}
                :handler    (fn [req] (auth/login! req))}}]]
 
    ;; TODO Consider splitting user from the blog-entry query or modifying the spec to better support it
@@ -143,8 +143,8 @@
              :middleware [middleware/wrap-restricted]
              :parameters {:body ::new_entry}
              :responses  {201 {:body ::entry}
-                          400 {:body string?}
-                          500 {:body string?}}
+                          400 {:body {:message string?}}
+                          500 {:body {:message string?}}}
              :handler    (fn [{{:keys [body]} :parameters}]
                            (blog/create-entry! body))
              }}]
@@ -153,7 +153,7 @@
      {:get    {:summary    "Gets a single entry by id"
                :parameters {:path {:id uuid?}}
                :responses  {200 {:body ::entry}
-                            404 {:body string?}}
+                            404 {:body {:message string?}}}
                :handler    (fn [{{{:keys [id]} :path} :parameters}]
                              (blog/get-entry id))
                }
@@ -162,8 +162,8 @@
                :middleware [middleware/wrap-restricted]
                :parameters {:path {:id uuid?}}
                :responses  {204 {:res any?}
-                            404 {:body string?}
-                            500 {:body string?}}
+                            404 {:body {:message string?}}
+                            500 {:body {:message string?}}}
                :handler    (fn [{{{:keys [id]} :path} :parameters}]
                              (blog/delete-entry! id))
                }
@@ -173,8 +173,8 @@
                :parameters {:path {:id uuid?}
                             :body {:header string? :summary string? :content string?}}
                :responses  {200 {:body ::entry}
-                            404 {:body string?}
-                            500 {:body string?}}
+                            404 {:body {:message string?}}
+                            500 {:body {:message string?}}}
                :handler    (fn [{{{:keys [id]} :path}                     :parameters
                                  {{:keys [header summary content]} :body} :parameters}]
                              (blog/update-entry! id header summary content))
