@@ -37,6 +37,7 @@
      [:hr.header-separator]]))
 
 ;;TODO Add fancy transition effects to components
+;;TODO Redirect to root if page does not exist
 
 (defn about-page []
   [:section.section>div.container>div.content
