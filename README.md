@@ -7,6 +7,8 @@ Supports multiple users, but doesn't have separate user roles or edit/delete rig
 To register user navigate to #/auth/register and login thorough #/auth/login. Once logged in you can edit anything from
 blog entries to site header.
 
+Test deploy is live on heroku: [https://tranquil-fortress-64511.herokuapp.com/](https://tranquil-fortress-64511.herokuapp.com/)
+
 ## Prerequisites
 
 Without docker:
