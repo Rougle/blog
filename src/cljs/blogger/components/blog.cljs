@@ -1,9 +1,13 @@
 (ns blogger.components.blog
   (:require [reagent.core :refer [atom]]
             [ajax.core :as ajax]
+            [goog.events :as gev]
             [markdown.core :refer [md->html]]
             [blogger.components.common :as c]
-            [blogger.components.session :as s]))
+            [blogger.components.session :as s])
+  (:import goog.net.IframeIo
+           goog.net.EventType
+           [goog.events EventType]))
 
 ;; TODO parse date into human-friendly form
 (defn entry-preview [entry]
@@ -97,29 +101,74 @@
          [(edit-entry data editing? error)]
          [(view-entry data)])])))
 
-(defn post-entry! [fields error]
+;;TODO Fix error handling
+(defn upload-file! [upload-form-id entry-id status]
+  (reset! status nil)
+  (let [io (IframeIo.)]
+    (gev/listen
+      io goog.net.EventType.SUCCESS
+      #(reset! status {:message "File uploaded successfully"}))
+    (gev/listen
+      io goog.net.EventType.ERROR
+      #(reset! status {:message "File upload failed"}))
+    (.setErrorChecker io #(= "error" (.getResponseText io)))
+    (.sendFromForm
+      io
+      (.getElementById js/document upload-form-id)
+      (str "/api/blog/entry/" entry-id "/image"))))
+
+;; TODO Redirect only if upload was a success
+(defn post-entry! [fields form-id input-id error redirect?]
   (reset! error {})
   (ajax/POST "/api/blog/entry"
              {:params @fields
               :handler #(do
-                          (reset! fields {})
-                          (s/set-hash! (str "/entry/view/" (:id %))))
+                          (if (not (clojure.string/blank? (aget (.getElementById js/document input-id) "value")))
+                            (upload-file! form-id (:id @fields) error))
+                          (if redirect?
+                            (s/set-hash! (str "/entry/view/" (:id %))))
+                          (reset! fields %))
               :error-handler #(reset! error {:message (:status-text %)})}))
 
+;; TODO Clear input/cancel
+;; TODO Dynamically create and destroy inputs as needed
+;; TODO Fix error/success messages
+;; TODO Add image upload to edit page
+;; TODO Add image delete to edit page
+(defn upload-form [form-id input-id]
+  (let [status (atom nil)]
+    (fn []
+      [:div
+       [c/request-error status]
+       [:form {:id form-id
+               :enc-type "multipart/form-data"
+               :method "POST"}
+        [:fieldset.form-group
+         [:label {:for "file"} "Select an image for upload "]
+         [:input.form-control {:id input-id :name "file" :type "file"}]]]
+       ])))
+
 ;; TODO Common client-side/server-side checks to cljc
+;; TODO Buttons into reusable components
 (defn create-entry []
   (let [fields (atom {})
+        form-id "upload-form"
+        input-id "file-input"
         error (atom {})]
     (swap! fields assoc :author (:username @s/session))
     (fn []
       [:div
        [(c/request-error error)]
        [:h2 "Create a new entry"]
-       [entry-fields fields]
-       [:div.form-btn-group
-        [:a {:href "#/"}
-         [:button.btn.btn-danger
-          "Cancel"]]
-        [:button.btn.btn-primary
-         {:on-click #(post-entry! fields error)}
-         "Post"]]])))
+       [:div
+        [entry-fields fields]
+        [:h6 "Add images"]
+        [:p "You can refer them in markdown like this: \"img/example.jpg\" "]
+        [(upload-form form-id input-id)]
+        [:div.form-btn-group
+         [:a {:href "#/"}
+          [:button.btn.btn-danger
+           "Cancel"]]
+         [:button.btn.btn-primary
+          {:on-click #(post-entry! fields form-id input-id error false)}
+          "Post"]]]])))

@@ -16,8 +16,10 @@
     [blogger.routes.services.content :as content]
     [clojure.spec.alpha :as s]
     [clojure.tools.logging :as log]
-    [blogger.middleware :as middleware]))
+    [blogger.middleware :as middleware]
+    [spec-tools.core :as st]))
 
+;; TODO Move these to a new file
 (s/def ::id uuid?)
 (s/def ::username string?)
 (s/def ::pass string?)
@@ -30,6 +32,15 @@
 (s/def ::last_name string?)
 (s/def ::created string?)
 (s/def ::last_modified string?)
+
+(s/def :file/filename string?)
+(s/def :file/content-type string?)
+(s/def :file/size integer?)
+(s/def :file/tempfile #(instance? java.io.File %))
+
+(s/def ::file (st/spec {:spec             (s/keys :req-un [:file/filename :file/content-type :file/size]
+                                                  :opt-un [:file/tempfile])
+                        :json-schema/type "file"}))
 
 (s/def ::new_user (s/keys :req-un [::secret ::pass ::first_name ::last_name]))
 (s/def ::user (s/keys :req-un [::username ::pass ::first_name ::last_name]))
@@ -145,8 +156,8 @@
              :responses  {201 {:body ::entry}
                           400 {:body {:message string?}}
                           500 {:body {:message string?}}}
-             :handler    (fn [{{:keys [body]} :parameters}]
-                           (blog/create-entry! body))
+             :handler    (fn [{{{:keys [author header summary content]} :body} :parameters}]
+                           (blog/create-entry! author header summary content))
              }}]
 
     ["/entry/:id"
@@ -179,4 +190,18 @@
                                  {{:keys [header summary content]} :body} :parameters}]
                              (blog/update-entry! id header summary content))
                }
-      }]]])
+      }]
+
+    ["/entry/:id/image"
+     {:post {:summary    "Saves image"
+             :parameters {:path {:id uuid?}
+                          :multipart {:file multipart/temp-file-part}}
+             :responses  {201 {:body {:message string?}}
+                          400 {:body {:message string?}}
+                          500 {:body {:message string?}}}
+             :handler    (fn [{{{:keys [id]} :path} :parameters
+                              {{:keys [file]} :multipart} :parameters}]
+                           (log/debug file)
+                           (blog/upload-image! id file))
+             }}]
+    ]])

@@ -1,7 +1,9 @@
 (ns blogger.routes.services.blog
   (:require [blogger.db.core :as db]
             [clojure.tools.logging :as log]
-            [ring.util.http-response :as response]))
+            [ring.util.http-response :as response]
+            [clojure.java.io :as io])
+  (:import (java.io FileInputStream ByteArrayOutputStream)))
 
 (defn get-entries []
   (response/ok (db/get-entries)))
@@ -11,7 +13,7 @@
     (response/ok entry)
     (response/not-found {:message "Couldn't find entry with given id"})))
 
-(defn create-entry! [{:keys [author header summary content]}]
+(defn create-entry! [author header summary content]
   (try
     (let [id (java.util.UUID/randomUUID)]
       (db/create-entry!
@@ -36,6 +38,7 @@
       (log/error e)
       (response/internal-server-error {:message "Internal server error"}))))
 
+;;TODO Delete images from db and res on entry delete
 (defn delete-entry! [id]
   (try
     (if (= 1 (db/delete-entry! {:id id}))
@@ -44,3 +47,50 @@
     (catch Exception e
       (log/error e)
       (response/internal-server-error {:message "Internal server error"}))))
+
+(defn write-img-to-res! [file]
+  (with-open [w (io/output-stream (str "resources/public/img/" (:name file)))]
+    (.write w (:data file))))
+
+;;TODO Move images to img/entries/
+(defn delete-image-from-resources! [name]
+  (io/delete-file (str "resources/public/img/" name)))
+
+;;TODO Run on startup
+(defn publish-images []
+  (try
+    (let [images (db/get-images)]
+      (map #(write-img-to-res! %) images))
+    (catch Exception e
+      (log/error e))))
+
+(defn file->byte-array [file]
+  (with-open [input (FileInputStream. file)
+              buffer (ByteArrayOutputStream.)]
+    (io/copy input buffer)
+    (.toByteArray buffer)))
+
+(defn upload-image! [id file]
+  (let [{:keys [filename tempfile content-type]} file]
+    (try
+      (db/upload-image! {:name filename
+                         :type content-type
+                         :entry_id id
+                         :data (file->byte-array tempfile)})
+      (write-img-to-res! (db/get-image {:name filename}))
+      (response/ok {:message "Success"})
+      (catch Exception e
+        (log/error e)
+        (response/internal-server-error {:message "Internal server error"})))))
+
+(defn delete-image! [name]
+  (try
+    (db/delete-image! {:name name})
+    (delete-image-from-resources! name)
+    (response/ok {:message "Success"})
+    (catch Exception e
+      (log/error e)
+      (response/internal-server-error {:message "Internal server error"}))))
+
+(defn get-images []
+  (response/ok (db/get-images)))

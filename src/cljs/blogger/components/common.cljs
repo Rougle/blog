@@ -30,7 +30,13 @@
       :rows 30
       :on-change #(swap! fields assoc id (-> % .-target .-value))}]]])
 
+;; TODO Combine these two?
 (defn request-error [error]
   (fn []
     (when-let [message (:message @error)]
       [:div.alert.alert-danger (str message " - Check network-tab for details.")])))
+
+(defn request-success [response]
+  (fn []
+    (when-let [message (:message @response)]
+      [:div.alert.alert-success (str message " - Check network-tab for details.")])))
