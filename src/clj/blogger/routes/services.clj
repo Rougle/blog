@@ -186,9 +186,10 @@
                }
       }]
 
-    ;;TODO Add auth
+    ;;TODO Error on duplicate file name
     ["/entry/:id/image"
      {:post   {:summary    "Saves image"
+               :middleware [middleware/wrap-restricted]
                :parameters {:path {:id uuid?}
                             :multipart {:file ::file-or-files}}
                :responses  {201 {:body {:message string?}}
@@ -201,6 +202,7 @@
 
     ["/image/:name"
      {:delete {:summary    "Deletes a single image"
+               :middleware [middleware/wrap-restricted]
                :parameters {:path {:name uuid?}}
                :responses  {204 {:res any?}
                             400 {:body {:message string?}}
