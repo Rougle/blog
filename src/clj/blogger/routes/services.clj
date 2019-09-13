@@ -33,14 +33,8 @@
 (s/def ::created string?)
 (s/def ::last_modified string?)
 
-(s/def :file/filename string?)
-(s/def :file/content-type string?)
-(s/def :file/size integer?)
-(s/def :file/tempfile #(instance? java.io.File %))
-
-(s/def ::file (st/spec {:spec             (s/keys :req-un [:file/filename :file/content-type :file/size]
-                                                  :opt-un [:file/tempfile])
-                        :json-schema/type "file"}))
+(s/def ::file-or-files (s/or :file multipart/temp-file-part
+                             :files (s/coll-of multipart/temp-file-part)))
 
 (s/def ::new_user (s/keys :req-un [::secret ::pass ::first_name ::last_name]))
 (s/def ::user (s/keys :req-un [::username ::pass ::first_name ::last_name]))
@@ -192,16 +186,36 @@
                }
       }]
 
+    ;;TODO Add auth
     ["/entry/:id/image"
-     {:post {:summary    "Saves image"
-             :parameters {:path {:id uuid?}
-                          :multipart {:file multipart/temp-file-part}}
-             :responses  {201 {:body {:message string?}}
-                          400 {:body {:message string?}}
-                          500 {:body {:message string?}}}
-             :handler    (fn [{{{:keys [id]} :path} :parameters
-                              {{:keys [file]} :multipart} :parameters}]
-                           (log/debug file)
-                           (blog/upload-image! id file))
-             }}]
+     {:post   {:summary    "Saves image"
+               :parameters {:path {:id uuid?}
+                            :multipart {:file ::file-or-files}}
+               :responses  {201 {:body {:message string?}}
+                            400 {:body {:message string?}}
+                            500 {:body {:message string?}}}
+               :handler    (fn [{{{:keys [id]} :path} :parameters
+                                 {{:keys [file]} :multipart} :parameters}]
+                             (log/debug file)
+                             (blog/upload-images! id file))}}]
+
+    ["/image/:name"
+     {:delete {:summary    "Deletes a single image"
+               :parameters {:path {:name uuid?}}
+               :responses  {204 {:res any?}
+                            400 {:body {:message string?}}
+                            500 {:body {:message string?}}}
+               :handler    (fn [{{{:keys [name]} :path} :parameters}]
+                             (blog/delete-image! name))
+               }}]
+
+    ["/entry/:id/images"
+     {:get    {:summary    "Gets entry images"
+               :parameters {:path {:id uuid?}}
+               :responses  {200 {:res any?}
+                            404 {:body {:message string?}}
+                            500 {:body {:message string?}}}
+               :handler    (fn [{{{:keys [id]} :path} :parameters}]
+                             (blog/get-entry-images id))
+               }}]
     ]])

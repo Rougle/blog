@@ -91,6 +91,11 @@ VALUES (:name, :type, :entry_id, :data)
 -- :doc gets all images
 SELECT  * FROM images
 
+-- :name get-entry-images :? :*
+-- :doc gets all images
+SELECT  * FROM images
+WHERE entry_id = :entry_id
+
 -- :name get-image :? :1
 -- :doc gets all images
 SELECT  * FROM images
@@ -100,3 +105,8 @@ WHERE name = :name
 -- :doc deletes image with given name
 DELETE FROM images
 WHERE name = :name
+
+-- :name delete-entry-images! :! :n
+-- :doc deletes images tied to a given entry
+DELETE FROM images
+WHERE entry_id = :entry_id
