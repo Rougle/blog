@@ -208,8 +208,15 @@
                             400 {:body {:message string?}}
                             500 {:body {:message string?}}}
                :handler    (fn [{{{:keys [name]} :path} :parameters}]
-                             (blog/delete-image! name))
-               }}]
+                             (blog/delete-image! name))}
+
+      :get    {:summary    "Gets image with name"
+               :parameters {:path {:name string?}}
+               :responses  {204 {:res any?}
+                            404 {:body {:message string?}}
+                            500 {:body {:message string?}}}
+               :handler    (fn [{{{:keys [name]} :path} :parameters}]
+                             (blog/get-image name))}}]
 
     ["/entry/:id/images"
      {:get    {:summary    "Gets entry images"

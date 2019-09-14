@@ -3,7 +3,7 @@
             [clojure.tools.logging :as log]
             [ring.util.http-response :as response]
             [clojure.java.io :as io])
-  (:import (java.io FileInputStream ByteArrayOutputStream)))
+  (:import (java.io FileInputStream ByteArrayOutputStream ByteArrayInputStream)))
 
 (defn get-entries []
   (response/ok (db/get-entries)))
@@ -38,39 +38,16 @@
       (log/error e)
       (response/internal-server-error {:message "Internal server error"}))))
 
-;;TODO Move images to img/entries/
-(defn delete-img-resource! [name]
-  (io/delete-file (str "resources/public/img/" name)))
-
-(defn create-img-resource! [file]
-  (with-open [w (io/output-stream (str "resources/public/img/" (:name file)))]
-    (.write w (:data file))))
-
-(defn delete-entry-images! [entry-id]
-  (try
-    (let [images (db/get-entry-images {:entry_id entry-id})]
-        (db/delete-entry-images! {:entry_id entry-id})
-        (doall (map #(delete-img-resource! (:name %)) images)))
-    (catch Exception e
-      (log/error e))))
-
 ;;TODO Do in a transaction instead
 (defn delete-entry! [id]
   (try
-    (delete-entry-images! id)
+    (db/delete-entry-images! {:entry_id id})
     (if (= 1 (db/delete-entry! {:id id}))
       (response/no-content)
       (response/not-found {:message "Couldn't find entry with given id"}))
     (catch Exception e
       (log/error e)
       (response/internal-server-error {:message "Internal server error"}))))
-
-(defn prepare-img-resources []
-  (try
-    (let [images (db/get-images)]
-      (map #(create-img-resource! %) images))
-    (catch Exception e
-      (log/error e))))
 
 (defn file->byte-array [file]
   (with-open [input (FileInputStream. file)
@@ -86,7 +63,6 @@
                          :type content-type
                          :entry_id id
                          :data (file->byte-array tempfile)})
-      (create-img-resource! (db/get-image {:name filename}))
       {:filename filename :uploaded true}
       (catch Exception e
         (log/error e)
@@ -105,7 +81,6 @@
 (defn delete-image! [name]
   (try
     (db/delete-image! {:name name})
-    (delete-img-resource! name)
     (response/ok {:message "Success"})
     (catch Exception e
       (log/error e)
@@ -116,3 +91,10 @@
 
 (defn get-images []
   (response/ok (db/get-images)))
+
+(defn get-image [name]
+  (if-let [{:keys [data type]} (db/get-image {:name name})]
+    (-> (ByteArrayInputStream. data)
+        (response/ok)
+        (response/content-type type))
+    (response/not-found {:message "Not found"})))

@@ -141,7 +141,7 @@
            [c/primary-button #(update-entry! data fields editing? error) "Save"])]]
        [:div
         [:h6 "Article Images"]
-        [:p "You can refer them in markdown like this: \"img/example.jpg\" "]
+        [:p "You can refer them in markdown like this: \"api/blog/image/example.jpg\" "]
         (if (nil? (:id @data))
           [:p "No entry to attach images to. You need to post the entry before adding images to it."])
         [(upload-form (:id @data) results)]
