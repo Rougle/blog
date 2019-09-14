@@ -15,8 +15,11 @@
          [:div.preview-date [:small (c/parse-date-string created)]])
        [:a {:href (str "#/entry/view/" id)}
         [:h1 header]]
-       [:p summary]
-       [:p [:small (str "By " first_name " " last_name " on " created)]]])))
+       [:p summary]])))
+
+(defn add-entry-button []
+  [:a.fixed-float {:href "#/entry/post"}
+    [c/primary-button nil "New Entry"]])
 
 (defn entries-list []
   (let [entries (atom [])]
@@ -24,9 +27,7 @@
     (fn []
       [:div
        (if (:token @s/session)
-         [:div.form-btn-group
-          [:a {:href "#/entry/post"}
-           [c/primary-button nil "New Entry"]]])
+         [add-entry-button])
        (for [entry @entries]
          (let [{:keys [id]} entry]
            [:div {:key id}
