@@ -1,19 +1,25 @@
 (ns blogger.components.blog
   (:require [reagent.core :refer [atom]]
             [ajax.core :as ajax]
+            [cljs-time.format :as tf]
+            [cljs-time.coerce :as tc]
             [markdown.core :refer [md->html]]
             [blogger.components.common :as c]
             [blogger.components.session :as s]))
 
-;; TODO parse date into human-friendly form
 (defn entry-preview [entry]
   (fn []
-    (let [{:keys [id header summary first_name last_name created]} entry]
+    (let [{:keys [id header summary created]} entry]
       [:div.blog-preview
+       (if (not (nil? entry))
+         [:div.preview-date [:small (c/parse-date-string created)]])
        [:a {:href (str "#/entry/view/" id)}
         [:h1 header]]
-       [:p summary]
-       [:p [:small (str "By " first_name " " last_name " on " created)]]])))
+       [:p summary]])))
+
+(defn add-entry-button []
+  [:a.fixed-float {:href "#/entry/post"}
+    [c/primary-button nil "New Entry"]])
 
 (defn entries-list []
   (let [entries (atom [])]
@@ -21,9 +27,7 @@
     (fn []
       [:div
        (if (:token @s/session)
-         [:div.form-btn-group
-          [:a {:href "#/entry/post"}
-           [c/primary-button nil "New Entry"]]])
+         [add-entry-button])
        (for [entry @entries]
          (let [{:keys [id]} entry]
            [:div {:key id}
@@ -136,6 +140,7 @@
         [:h2 "Entry"]
         [entry-fields fields]
         [:div.form-btn-group
+         [c/danger-button #(s/set-hash! "/") "Cancel"]
          (if (nil? (:id @data))
            [c/primary-button #(post-entry! data fields error) "Post"]
            [c/primary-button #(update-entry! data fields editing? error) "Save"])]]
@@ -154,7 +159,8 @@
     (fn []
       [:div
        [:h1 header]
-       [:p [:small (str "By " first_name " " last_name " on " created)]]
+       (if (not (nil? created))
+         [:p [:small (c/parse-date-string created)]])
        [:div {:dangerouslySetInnerHTML {:__html (md->html content) }}]])))
 
 (defn entry [id]
