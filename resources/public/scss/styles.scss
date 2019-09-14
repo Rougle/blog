@@ -138,7 +138,6 @@ body {
 .header-separator {
     margin: 8px;
     border-top: 2px solid $light-dark;
-
 }
 
 .site-header {
@@ -150,4 +149,15 @@ body {
     position: absolute;
     right: 10px;
     top: 7px;
+}
+
+.text-icon {
+    top: 6px;
+    position: relative;
+
+    &.clickable {
+        &:hover {
+            cursor: pointer;
+        }
+    }
 }

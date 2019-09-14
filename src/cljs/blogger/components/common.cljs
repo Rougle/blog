@@ -30,7 +30,6 @@
       :rows 30
       :on-change #(swap! fields assoc id (-> % .-target .-value))}]]])
 
-;; TODO Combine these two?
 (defn request-error [error]
   (fn []
     (when-let [message (:message @error)]
@@ -40,7 +39,6 @@
   (fn []
     (when-let [message (:message @response)]
       [:div.alert.alert-success (str message " - Check network-tab for details.")])))
-
 
 (defn danger-button [handler text]
   [:button.btn.btn-danger

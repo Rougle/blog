@@ -98,7 +98,7 @@
   (try
     (if (vector? file)
       (response/ok {:message (map #(upload-single-image! id %) file)})
-      (response/ok {:message (upload-single-image! id file)}))
+      (response/ok {:message [(upload-single-image! id file)]}))
     (catch Exception e
       (log/error e)
       (response/internal-server-error {:message "Internal server error"}))))

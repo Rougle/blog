@@ -203,7 +203,7 @@
     ["/image/:name"
      {:delete {:summary    "Deletes a single image"
                :middleware [middleware/wrap-restricted]
-               :parameters {:path {:name uuid?}}
+               :parameters {:path {:name string?}}
                :responses  {204 {:res any?}
                             400 {:body {:message string?}}
                             500 {:body {:message string?}}}

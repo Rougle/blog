@@ -80,18 +80,19 @@
             [:div (str filename " - Success")]
             [:div (str filename " - Failure")])]))]))
 
-(defn upload-form [entry-id]
-  (let [results (atom {})
-        input-id "image-input"]
+(defn upload-form [entry-id results]
+  (let [input-id "image-input"]
     (fn []
       [:div
        [:fieldset {:disabled (nil? entry-id)}
         [:label {:for "file"} "Select an image for upload "]
-        [:input {:name "file" :id input-id :type "file" :multiple true }]]
-       [(upload-results results)]
-       (if (not (nil? entry-id))
-         [:div.form-btn-group
-          [c/primary-button #(upload-images! input-id entry-id results) "Upload"]])])))
+        [:input
+         {:name "file"
+          :id input-id
+          :type "file"
+          :multiple true
+          :on-change #(upload-images! input-id entry-id results)}]]
+       [(upload-results results)]])))
 
 (defn entry-fields [fields]
   [:div
@@ -99,13 +100,42 @@
    [c/text-input "Summary - this will be only shown in preview" :summary "Enter a summary" fields]
    [c/textarea-input "Content" :content "Enter blog content in markup" fields]])
 
+(defn delete-image! [image images]
+  (ajax/DELETE (str "/api/blog/image/" (:name image))
+               {:handler       #(swap! images
+                                       (fn [imgs] (remove (fn [img] (= image img)) imgs)))
+                :error-handler #(print "Not ok")}))
+
+(defn image-list [image images]
+  (fn []
+    [:div
+     [:div (:name image)
+      [:i.material-icons.text-icon.clickable
+       {:on-click #(delete-image! image images)} "delete"]]]))
+
+(defn entry-images [entry-id results]
+  (let [images (atom {})
+        error (atom {})
+        force-update @results]
+    (ajax/GET (str "/api/blog/entry/" entry-id "/images")
+              {:handler #(reset! images %)
+               :error-handler #(reset! error %)})
+    (fn []
+      [:div
+       [:h6 "Images attached to the entry:"]
+       (for [image @images]
+         [:div {:key (:name image)}
+          [(image-list image images)]])
+       ])))
+
 ;; TODO Add image view and delete
 (defn edit-entry [data editing? error]
-  (let [fields (atom @data)]
+  (let [fields (atom @data)
+        results (atom {})]
     (fn []
       [:div
        [:div
-        [:h2 "Edit entry"]
+        [:h2 "Entry"]
         [entry-fields fields]
         [:div.form-btn-group
          (if (nil? (:id @data))
@@ -114,9 +144,12 @@
        [:div
         [:h6 "Article Images"]
         [:p "You can refer them in markdown like this: \"img/example.jpg\" "]
-        (if (nil? (:id @fields))
+        (if (nil? (:id @data))
           [:p "No entry to attach images to. You need to post the entry before adding images to it."])
-        [(upload-form (:id @fields))]]])))
+        [(upload-form (:id @data) results)]
+        [:hr]
+        (if (:id @data)
+          [(entry-images (:id @data) results)])]])))
 
 (defn view-entry [fields]
   (let [{:keys [header content first_name last_name created]} @fields]
@@ -145,7 +178,6 @@
          [(view-entry data)])])))
 
 ;; TODO Common client-side/server-side checks to cljc
-;; TODO Buttons into reusable components
 (defn create-entry []
   (let [data (atom nil)
         editing? (atom true)
