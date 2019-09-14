@@ -31,11 +31,8 @@
         [c/password-input "Secret" :secret "Enter secret" fields]
         [:div.form-btn-group
          [:a {:href "#/"}
-          [:button.btn.btn-danger
-           "Cancel"]]
-         [:button.btn.btn-primary
-          {:on-click #(register! fields error)}
-          "Register"]]]])))
+          [c/danger-button nil "Cancel"]]
+         [c/primary-button #(register! fields error) "Register"]]]])))
 
 (defn encode-auth [user pass]
   (->> (str user ":" pass) (b64/encodeString) (str "Basic ")))
@@ -64,11 +61,8 @@
         [c/password-input "Password" :pass "Enter password" fields]
         [:div.form-btn-group
          [:a {:href "#/"}
-          [:button.btn.btn-danger
-           "Cancel"]]
-         [:button.btn.btn-primary
-          {:on-click #(login! fields error)}
-          "Login"]]]])))
+          [c/danger-button nil "Cancel"]]
+         [c/primary-button #(login! fields error) "Login"]]]])))
 
 (defn user-logout []
   (fn []
