@@ -54,6 +54,7 @@
                         :started)]
     (log/info component "started"))
   (migrations/migrate ["migrate"] (select-keys env [:database-url]))
+  (blogger.routes.services.blog/prepare-img-resources)
   (.addShutdownHook (Runtime/getRuntime) (Thread. stop-app)))
 
 (defn -main [& args]

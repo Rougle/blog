@@ -65,8 +65,7 @@
       (log/error e)
       (response/internal-server-error {:message "Internal server error"}))))
 
-;;TODO Run on startup
-(defn populate-image-resources []
+(defn prepare-img-resources []
   (try
     (let [images (db/get-images)]
       (map #(create-img-resource! %) images))
