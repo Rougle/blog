@@ -17,19 +17,18 @@
 
 (defn entries-list []
   (let [entries (atom [])]
-  (ajax/GET "/api/blog/entries" {:handler #(reset! entries %)})
-  (fn []
-    [:div
-     (if (:token @s/session)
-       [:div.form-btn-group
-        [:a {:href "#/entry/post"}
-         [:button.btn.btn-primary
-          "New Entry"]]])
-     (for [entry @entries]
-       (let [{:keys [id]} entry]
-         [:div {:key id}
-          [entry-preview entry]
-          [:hr]]))])))
+    (ajax/GET "/api/blog/entries" {:handler #(reset! entries %)})
+    (fn []
+      [:div
+       (if (:token @s/session)
+         [:div.form-btn-group
+          [:a {:href "#/entry/post"}
+           [c/primary-button nil "New Entry"]]])
+       (for [entry @entries]
+         (let [{:keys [id]} entry]
+           [:div {:key id}
+            [entry-preview entry]
+            [:hr]]))])))
 
 (defn delete-entry! [id error]
   (reset! error {})
@@ -46,34 +45,117 @@
                           (reset! editing? false))
               :error-handler #(reset! error {:message (:status-text %)})}))
 
+(defn post-entry! [data fields error]
+  (reset! error {})
+  (swap! fields assoc :author (:username @s/session))
+  (ajax/POST "/api/blog/entry"
+             {:params @fields
+              :handler #(do
+                          (reset! fields %)
+                          (reset! data %))
+              :error-handler #(reset! error {:message (:status-text %)})}))
+
+(defn upload-images! [input-id entry-id results]
+  (let [form-data (let [f-d (js/FormData.)
+                        files (.-files (.getElementById js/document input-id))
+                        name (.-name (.getElementById js/document input-id))]
+                    (doseq [file-key (.keys js/Object files)]
+                      (.append f-d name (aget files file-key)))
+                    f-d)]
+        (ajax/POST (str "/api/blog/entry/" entry-id "/image")
+                   {:body form-data
+                    :response-format :json
+                    :keywords? true
+                    :handler #(reset! results (:message %))
+                    :error-handler #(reset! results (:message %))})))
+
+(defn upload-results [results]
+  (fn []
+    [:div
+     (for [result @results]
+       (let [{:keys [filename uploaded]} result]
+         [:div {:key filename}
+          (if uploaded
+            [:div (str filename " - Success")]
+            [:div (str filename " - Failure")])]))]))
+
+(defn upload-form [entry-id results]
+  (let [input-id "image-input"]
+    (fn []
+      [:div
+       [:fieldset {:disabled (nil? entry-id)}
+        [:label {:for "file"} "Select an image for upload "]
+        [:input
+         {:name "file"
+          :id input-id
+          :type "file"
+          :multiple true
+          :on-change #(upload-images! input-id entry-id results)}]]
+       [(upload-results results)]])))
+
 (defn entry-fields [fields]
   [:div
    [c/text-input "Header" :header "Enter a header" fields]
    [c/text-input "Summary - this will be only shown in preview" :summary "Enter a summary" fields]
    [c/textarea-input "Content" :content "Enter blog content in markup" fields]])
 
-(defn edit-entry [data editing? error]
-  (let [fields (atom @data)]
-    (fn []
-      [:div
-       [:h2 "Edit entry"]
-       [entry-fields fields]
-       [:div.form-btn-group
-        [:button.btn.btn-danger
-         {:on-click #(reset! editing? false)}
-         "Cancel"]
-        [:button.btn.btn-primary
-         {:on-click #(update-entry! data fields editing? error)}
-         "Post"]]])))
+(defn delete-image! [image images]
+  (ajax/DELETE (str "/api/blog/image/" (:name image))
+               {:handler       #(swap! images
+                                       (fn [imgs] (remove (fn [img] (= image img)) imgs)))
+                :error-handler #(print "Not ok")}))
 
-(defn view-entry [fields]
+(defn image-list [image images]
   (fn []
     [:div
-     (let [{:keys [header content first_name last_name created]} @fields]
+     [:div (:name image)
+      [:i.material-icons.text-icon.clickable
+       {:on-click #(delete-image! image images)} "delete"]]]))
+
+(defn entry-images [entry-id results]
+  (let [images (atom {})
+        error (atom {})
+        force-update @results]
+    (ajax/GET (str "/api/blog/entry/" entry-id "/images")
+              {:handler #(reset! images %)
+               :error-handler #(reset! error %)})
+    (fn []
+      [:div
+       [:h6 "Images attached to the entry:"]
+       (for [image @images]
+         [:div {:key (:name image)}
+          [(image-list image images)]])
+       ])))
+
+(defn edit-entry [data editing? error]
+  (let [fields (atom @data)
+        results (atom {})]
+    (fn []
+      [:div
        [:div
-        [:h1 header]
-        [:p [:small (str "By " first_name " " last_name " on " created)]]
-        [:div {:dangerouslySetInnerHTML {:__html (md->html content) }}]])]))
+        [:h2 "Entry"]
+        [entry-fields fields]
+        [:div.form-btn-group
+         (if (nil? (:id @data))
+           [c/primary-button #(post-entry! data fields error) "Post"]
+           [c/primary-button #(update-entry! data fields editing? error) "Save"])]]
+       [:div
+        [:h6 "Article Images"]
+        [:p "You can refer them in markdown like this: \"img/example.jpg\" "]
+        (if (nil? (:id @data))
+          [:p "No entry to attach images to. You need to post the entry before adding images to it."])
+        [(upload-form (:id @data) results)]
+        [:hr]
+        (if (:id @data)
+          [(entry-images (:id @data) results)])]])))
+
+(defn view-entry [fields]
+  (let [{:keys [header content first_name last_name created]} @fields]
+    (fn []
+      [:div
+       [:h1 header]
+       [:p [:small (str "By " first_name " " last_name " on " created)]]
+       [:div {:dangerouslySetInnerHTML {:__html (md->html content) }}]])))
 
 (defn entry [id]
   (let [data (atom nil)
@@ -87,39 +169,24 @@
        [(c/request-error error)]
        (if (and (:token @s/session) (not @editing?))
          [:div.form-btn-group
-          [:button.btn.btn-danger
-           {:on-click #(delete-entry! id error)}
-           "Delete"]
-          [:button.btn.btn-primary
-           {:on-click #(reset! editing? true)}
-           "Edit"]])
+          [c/danger-button #(delete-entry! id error) "Delete"]
+          [c/primary-button #(reset! editing? true) "Edit"]])
        (if @editing?
          [(edit-entry data editing? error)]
          [(view-entry data)])])))
 
-(defn post-entry! [fields error]
-  (reset! error {})
-  (ajax/POST "/api/blog/entry"
-             {:params @fields
-              :handler #(do
-                          (reset! fields {})
-                          (s/set-hash! (str "/entry/view/" (:id %))))
-              :error-handler #(reset! error {:message (:status-text %)})}))
-
 ;; TODO Common client-side/server-side checks to cljc
 (defn create-entry []
-  (let [fields (atom {})
+  (let [data (atom nil)
+        editing? (atom true)
         error (atom {})]
-    (swap! fields assoc :author (:username @s/session))
     (fn []
       [:div
        [(c/request-error error)]
-       [:h2 "Create a new entry"]
-       [entry-fields fields]
-       [:div.form-btn-group
-        [:a {:href "#/"}
-         [:button.btn.btn-danger
-          "Cancel"]]
-        [:button.btn.btn-primary
-         {:on-click #(post-entry! fields error)}
-         "Post"]]])))
+       (if (and (:token @s/session) (not @editing?))
+         [:div.form-btn-group
+          [c/danger-button #(delete-entry! (:id @data) error) "Delete"]
+          [c/primary-button #(reset! editing? true) "Edit"]])
+       (if @editing?
+         [(edit-entry data editing? error)]
+         [(view-entry data)])])))

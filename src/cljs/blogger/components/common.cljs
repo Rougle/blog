@@ -34,3 +34,18 @@
   (fn []
     (when-let [message (:message @error)]
       [:div.alert.alert-danger (str message " - Check network-tab for details.")])))
+
+(defn request-success [response]
+  (fn []
+    (when-let [message (:message @response)]
+      [:div.alert.alert-success (str message " - Check network-tab for details.")])))
+
+(defn danger-button [handler text]
+  [:button.btn.btn-danger
+   {:on-click handler}
+   text])
+
+(defn primary-button [handler text]
+  [:button.btn.btn-primary
+   {:on-click handler}
+   text])

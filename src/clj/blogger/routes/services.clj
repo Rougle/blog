@@ -16,8 +16,10 @@
     [blogger.routes.services.content :as content]
     [clojure.spec.alpha :as s]
     [clojure.tools.logging :as log]
-    [blogger.middleware :as middleware]))
+    [blogger.middleware :as middleware]
+    [spec-tools.core :as st]))
 
+;; TODO Move these to a new file
 (s/def ::id uuid?)
 (s/def ::username string?)
 (s/def ::pass string?)
@@ -30,6 +32,9 @@
 (s/def ::last_name string?)
 (s/def ::created string?)
 (s/def ::last_modified string?)
+
+(s/def ::file-or-files (s/or :file multipart/temp-file-part
+                             :files (s/coll-of multipart/temp-file-part)))
 
 (s/def ::new_user (s/keys :req-un [::secret ::pass ::first_name ::last_name]))
 (s/def ::user (s/keys :req-un [::username ::pass ::first_name ::last_name]))
@@ -145,8 +150,8 @@
              :responses  {201 {:body ::entry}
                           400 {:body {:message string?}}
                           500 {:body {:message string?}}}
-             :handler    (fn [{{:keys [body]} :parameters}]
-                           (blog/create-entry! body))
+             :handler    (fn [{{{:keys [author header summary content]} :body} :parameters}]
+                           (blog/create-entry! author header summary content))
              }}]
 
     ["/entry/:id"
@@ -179,4 +184,40 @@
                                  {{:keys [header summary content]} :body} :parameters}]
                              (blog/update-entry! id header summary content))
                }
-      }]]])
+      }]
+
+    ;;TODO Error on duplicate file name
+    ["/entry/:id/image"
+     {:post   {:summary    "Saves image"
+               :middleware [middleware/wrap-restricted]
+               :parameters {:path {:id uuid?}
+                            :multipart {:file ::file-or-files}}
+               :responses  {201 {:body {:message string?}}
+                            400 {:body {:message string?}}
+                            500 {:body {:message string?}}}
+               :handler    (fn [{{{:keys [id]} :path} :parameters
+                                 {{:keys [file]} :multipart} :parameters}]
+                             (log/debug file)
+                             (blog/upload-images! id file))}}]
+
+    ["/image/:name"
+     {:delete {:summary    "Deletes a single image"
+               :middleware [middleware/wrap-restricted]
+               :parameters {:path {:name string?}}
+               :responses  {204 {:res any?}
+                            400 {:body {:message string?}}
+                            500 {:body {:message string?}}}
+               :handler    (fn [{{{:keys [name]} :path} :parameters}]
+                             (blog/delete-image! name))
+               }}]
+
+    ["/entry/:id/images"
+     {:get    {:summary    "Gets entry images"
+               :parameters {:path {:id uuid?}}
+               :responses  {200 {:res any?}
+                            404 {:body {:message string?}}
+                            500 {:body {:message string?}}}
+               :handler    (fn [{{{:keys [id]} :path} :parameters}]
+                             (blog/get-entry-images id))
+               }}]
+    ]])

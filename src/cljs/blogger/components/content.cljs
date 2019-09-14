@@ -23,12 +23,8 @@
        [:div
         [c/textarea-input "Content" :content "Enter content in markdown format" fields]]
        [:div.form-btn-group
-        [:button.btn.btn-danger
-         {:on-click #(reset! editing? false)}
-         "Cancel"]
-        [:button.btn.btn-primary
-         {:on-click #(update-content! id content fields editing? error)}
-         "Post"]]])))
+        [c/danger-button #(reset! editing? false) "Cancel"]
+        [c/primary-button #(update-content! id content fields editing? error) "Post"]]])))
 
 (defn content [id]
   (let [editing? (atom false)
@@ -42,9 +38,7 @@
        [(c/request-error error)]
        (if (and (:token @s/session) (not @editing?))
          [:div.form-btn-group
-          [:button.btn.btn-primary
-           {:on-click #(reset! editing? true)}
-           "Edit"]])
+          [c/primary-button #(reset! editing? true) "Edit"]])
        (if @editing?
          [(edit-content-form id content editing? error)]
          [:div {:dangerouslySetInnerHTML {:__html (md->html @content) }}])])))
@@ -64,14 +58,8 @@
          [:div.header-edit-form
           [:form
            [c/input :text :content "Update header" fields]
-           [:button.btn.btn-danger
-            {:on-click #(reset! editing? false)}
-            "Cancel"]
-           [:button.btn.btn-primary
-            {:on-click #(update-content! "header" header fields editing? error)}
-            "Save"]]])
+           [c/danger-button #(reset! editing? false) "Cancel"]
+           [c/primary-button #(update-content! "header" header fields editing? error) "Save"]]])
        (if (and (:token @s/session) (not @editing?))
          [:div.btn-header-edit
-          [:button.btn.btn-primary
-           {:on-click #(reset! editing? true)}
-           "Edit"]])])))
+          [c/primary-button #(reset! editing? true) "Edit"]])])))

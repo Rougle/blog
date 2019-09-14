@@ -78,3 +78,35 @@ WHERE id = :id
 SELECT content
 FROM page_content
 WHERE id = :id
+
+-- IMAGES
+
+-- :name upload-image! :! :n
+-- :doc saves a new image to db
+INSERT INTO images
+(name, type, entry_id, data)
+VALUES (:name, :type, :entry_id, :data)
+
+-- :name get-images :? :*
+-- :doc gets all images
+SELECT  * FROM images
+
+-- :name get-entry-images :? :*
+-- :doc gets all images
+SELECT  * FROM images
+WHERE entry_id = :entry_id
+
+-- :name get-image :? :1
+-- :doc gets all images
+SELECT  * FROM images
+WHERE name = :name
+
+-- :name delete-image! :! :n
+-- :doc deletes image with given name
+DELETE FROM images
+WHERE name = :name
+
+-- :name delete-entry-images! :! :n
+-- :doc deletes images tied to a given entry
+DELETE FROM images
+WHERE entry_id = :entry_id
