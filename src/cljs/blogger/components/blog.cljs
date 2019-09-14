@@ -45,7 +45,6 @@
                           (reset! editing? false))
               :error-handler #(reset! error {:message (:status-text %)})}))
 
-;; TODO Redirect only if upload was a success
 (defn post-entry! [data fields error]
   (reset! error {})
   (swap! fields assoc :author (:username @s/session))
@@ -128,7 +127,6 @@
           [(image-list image images)]])
        ])))
 
-;; TODO Add image view and delete
 (defn edit-entry [data editing? error]
   (let [fields (atom @data)
         results (atom {})]

@@ -92,7 +92,6 @@
      ["/about" :about]
      ["/contact" :contact]]))
 
-;;TODO There should be a better way to pass path params to components
 (defn match-route [uri]
   (let [matched-route (->> (or (not-empty (string/replace uri #"^.*#" "")) "/")
                            (reitit/match-by-path router))]
