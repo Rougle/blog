@@ -1,4 +1,6 @@
-(ns blogger.components.common)
+(ns blogger.components.common
+  (:require [cljs-time.format :as tf]
+            [cljs-time.coerce :as tc]))
 
 (defn input [type id placeholder fields]
   [:input
@@ -49,3 +51,9 @@
   [:button.btn.btn-primary
    {:on-click handler}
    text])
+
+(def custom-formatter (tf/formatter "dd. MMMM yyyy"))
+
+(defn parse-date-string
+  ([date-string](tf/unparse custom-formatter (tc/to-date-time date-string)))
+  ([date-string formatter] (tf/unparse formatter (tc/to-date-time date-string))))
