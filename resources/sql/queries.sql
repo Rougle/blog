@@ -92,12 +92,12 @@ VALUES (:name, :type, :entry_id, :data)
 SELECT  * FROM images
 
 -- :name get-entry-images :? :*
--- :doc gets all images
+-- :doc gets entry images
 SELECT  * FROM images
 WHERE entry_id = :entry_id
 
 -- :name get-image :? :1
--- :doc gets all images
+-- :doc gets image with name
 SELECT  * FROM images
 WHERE name = :name
 
