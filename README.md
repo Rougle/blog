@@ -25,7 +25,9 @@ None.
 ## Running
 
 Run `docker-compose up` and connect to port 7000 with nREPL.
+
 To start the app, run `(start)`
+
 To start figwheel, run `(start-fw)`
 
 To compile sass to css run `lein sass watch` in terminal. It would be smarter to add figwheel script for this,

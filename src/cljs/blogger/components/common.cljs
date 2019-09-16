@@ -52,7 +52,7 @@
    {:on-click handler}
    text])
 
-(def custom-formatter (tf/formatter "dd. MMMM yyyy"))
+(def custom-formatter (tf/formatter "d. MMMM yyyy"))
 
 (defn parse-date-string
   ([date-string](tf/unparse custom-formatter (tc/to-date-time date-string)))
