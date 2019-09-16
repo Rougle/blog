@@ -12,7 +12,7 @@
     (let [{:keys [id header summary created]} entry]
       [:div.blog-preview
        (if (not (nil? entry))
-         [:div.preview-date [:small (c/parse-date-string created)]])
+         [:div.preview-date (c/parse-date-string created)])
        [:a {:href (str "#/entry/view/" id)}
         [:h1 header]]
        [:p summary]])))

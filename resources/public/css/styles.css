@@ -94,11 +94,11 @@ textarea {
     margin: 6px; }
 
 .header-separator {
-  margin: 8px;
+  margin: 0px;
   border-top: 2px solid #3f3f3f; }
 
 .site-header {
-  font-size: 100px;
+  font-size: 90px;
   text-align: center; }
 
 .sign-out {
@@ -115,7 +115,7 @@ textarea {
 .preview-date {
   text-align: right;
   position: absolute;
-  right: 0;
+  right: 20px;
   margin-top: 5px; }
 
 .fixed-float {
@@ -127,5 +127,8 @@ textarea {
   box-shadow: 1px 2px 3px #999; }
   .fixed-float > button {
     margin: 0; }
+
+#app {
+  font-size: 14px; }
 
 /*# sourceMappingURL=styles.css.map */
