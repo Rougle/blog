@@ -54,11 +54,16 @@
 (defn view-entry []
   (let [{{:keys [id]} :path-params} @match]
     [:section.section>div.container>div.content
-     [(blog/entry id)]]))
+     [(blog/view-entry id)]]))
 
 (defn new-entry []
   [:section.section>div.container>div.content
    [(blog/create-entry)]])
+
+(defn edit-entry []
+  (let [{{:keys [id]} :path-params} @match]
+    [:section.section>div.container>div.content
+     [(blog/edit-entry id)]]))
 
 (defn register []
   [:section.section>div.container>div.content
@@ -72,6 +77,7 @@
   {:list-entries #'entries-list
    :view-entry #'view-entry
    :post-entry #'new-entry
+   :edit-entry #'edit-entry
    :register #'register
    :login #'login
    :about #'about-page
@@ -88,6 +94,7 @@
     [["/" :list-entries]
      ["/entry/view/:id" :view-entry]
      ["/entry/post" :post-entry]
+     ["/entry/edit/:id" :edit-entry]
      ["/auth/register" :register]
      ["/auth/login" :login]
      ["/about" :about]
