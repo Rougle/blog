@@ -66,7 +66,6 @@
 
 (defn post-entry! [fields data upload-input-id error]
   (reset! error {})
-  (swap! fields assoc :author (:username @s/session))
   (ajax/POST "/api/blog/entry"
              {:params @fields
               :handler #(do

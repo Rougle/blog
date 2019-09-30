@@ -38,7 +38,7 @@
 
 (s/def ::new_user (s/keys :req-un [::secret ::pass ::first_name ::last_name]))
 (s/def ::user (s/keys :req-un [::username ::pass ::first_name ::last_name]))
-(s/def ::new_entry (s/keys :req-un [::author ::header ::summary ::content]))
+(s/def ::new_entry (s/keys :req-un [::header ::summary ::content]))
 (s/def ::entry (s/keys :req-un [::id ::author ::created ::last_modified ::header ::summary ::content ::first_name ::last_name]))
 (s/def ::entries (s/coll-of ::entry))
 
@@ -150,8 +150,9 @@
              :responses  {201 {:body ::entry}
                           400 {:body {:message string?}}
                           500 {:body {:message string?}}}
-             :handler    (fn [{{{:keys [author header summary content]} :body} :parameters}]
-                           (blog/create-entry! author header summary content))
+             :handler    (fn [{{{:keys [header summary content]} :body} :parameters
+                              {{:keys [username]} :user} :identity}]
+                           (blog/create-entry! header summary content username))
              }}]
 
     ["/entry/:id"
