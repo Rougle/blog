@@ -13,7 +13,7 @@
     (response/ok entry)
     (response/not-found {:message "Couldn't find entry with given id"})))
 
-(defn create-entry! [author header summary content]
+(defn create-entry! [header summary content author]
   (try
     (let [id (java.util.UUID/randomUUID)]
       (db/create-entry!
