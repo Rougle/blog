@@ -86,11 +86,12 @@
         :type "file"
         :multiple true}]]]))
 
+;;TODO Fix error message
 (defn delete-image! [image images]
   (ajax/DELETE (str "/api/blog/image/" (:name image))
                {:handler       #(swap! images
                                        (fn [imgs] (remove (fn [img] (= image img)) imgs)))
-                :error-handler #(print "Not ok")}))
+                :error-handler #(print "Could not delete image")}))
 
 (defn image-list [image images]
   (fn []
@@ -113,11 +114,17 @@
           [(image-list image images)]])
        ])))
 
-(defn entry-fields [fields]
+(defn entry-fields [fields data upload-input-id error]
   [:div
+   [:h2 "Entry"]
    [c/text-input "Header" :header "Enter a header" fields]
    [c/text-input "Summary - this will be only shown in preview" :summary "Enter a summary" fields]
-   [c/textarea-input "Content" :content "Enter blog content in markup" fields]])
+   [c/textarea-input "Content" :content "Enter blog content in markup" fields]
+   [:div.form-btn-group
+    [c/danger-button #(s/set-hash! "/") "Cancel"]
+    (if (nil? (:id @fields))
+      [c/primary-button #(post-entry! fields data upload-input-id error) "Save"]
+      [c/primary-button #(update-entry! fields data upload-input-id error) "Save"])]])
 
 (defn entry-form [data error]
   (let [fields (atom @data)
@@ -125,14 +132,7 @@
     (fn []
       [:div
        [(c/request-error error)]
-       [:div
-        [:h2 "Entry"]
-        [entry-fields fields]
-        [:div.form-btn-group
-         [c/danger-button #(s/set-hash! "/") "Cancel"]
-         (if (nil? (:id @fields))
-           [c/primary-button #(post-entry! fields data upload-input-id error) "Save"]
-           [c/primary-button #(update-entry! fields data upload-input-id error) "Save"])]]
+       [entry-fields fields data upload-input-id error]
        [:div
         [:h6 "Article Images"]
         [:p "You can refer them in markdown like this: \"api/blog/image/example.jpg\" "]
